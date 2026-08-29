@@ -107,7 +107,7 @@ sudo apt-get install -y \
 # ---------------------------------------------------------------------------
 DPI=96
 if command -v xdpyinfo >/dev/null 2>&1 && [ -n "${DISPLAY:-}" ]; then
-  DETECTED=$(xdpyinfo 2>/dev/null | awk -F'[x ]+' '/resolution:/{print $2}')
+  DETECTED=$(xdpyinfo 2>/dev/null | sed -n 's/^ *resolution: *\([0-9]*\)x.*/\1/p' | head -1)
   [ -n "${DETECTED:-}" ] && DPI="$DETECTED"
 fi
 if [ "$DPI" -ge 120 ]; then

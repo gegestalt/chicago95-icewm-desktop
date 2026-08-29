@@ -85,7 +85,7 @@ echo 'user_pref("widget.non-native-theme.enabled", false);' >> "$HOME/.mozilla/f
 
 DPI=96
 if command -v xdpyinfo >/dev/null 2>&1 && [ -n "${DISPLAY:-}" ]; then
-  DETECTED=$(xdpyinfo 2>/dev/null | awk -F'[x ]+' '/resolution:/{print $2}')
+  DETECTED=$(xdpyinfo 2>/dev/null | sed -n 's/^ *resolution: *\([0-9]*\)x.*/\1/p' | head -1)
   [ -n "${DETECTED:-}" ] && DPI="$DETECTED"
 fi
 
