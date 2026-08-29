@@ -118,6 +118,23 @@ fi
 echo "-- Detected ${DPI} DPI -> using $SCALE theme assets --"
 
 # ---------------------------------------------------------------------------
+# 3b. Xft.dpi via ~/.Xresources — this is what actually makes GTK/Xft apps
+#    (Firefox included) render at the correct size. It's auto-loaded at
+#    login by the standard /etc/X11/Xsession.d/30x11-common_xresources
+#    hook, so nothing else needs to reference it. Do NOT also set
+#    GDK_SCALE for GTK apps — it compounds with this and over-scales
+#    (this bit us: Firefox's toolbar rendered oversized until we removed
+#    a GDK_SCALE=2 override that seemed reasonable at 144 DPI but was
+#    redundant on top of Xft.dpi already handling it).
+track "$HOME/.Xresources"
+if [ -f "$HOME/.Xresources" ]; then
+  grep -v '^Xft\.dpi:' "$HOME/.Xresources" > "$HOME/.Xresources.tmp" || true
+  mv "$HOME/.Xresources.tmp" "$HOME/.Xresources"
+fi
+echo "Xft.dpi: $DPI" >> "$HOME/.Xresources"
+command -v xrdb >/dev/null 2>&1 && [ -n "${DISPLAY:-}" ] && xrdb -merge "$HOME/.Xresources" 2>/dev/null || true
+
+# ---------------------------------------------------------------------------
 # 4. IceWM dotfiles
 # ---------------------------------------------------------------------------
 echo "-- Installing IceWM config --"
@@ -217,7 +234,7 @@ Type=Application
 Version=1.0
 Name=ClackType
 Comment=A from-scratch typing-speed test
-Exec=env GDK_SCALE=2 GDK_DPI_SCALE=1 firefox --new-window "file://$GAMES_DIR/index.html"
+Exec=firefox --new-window "file://$GAMES_DIR/index.html"
 Icon=$GAMES_DIR/icon.png
 Terminal=false
 StartupNotify=true

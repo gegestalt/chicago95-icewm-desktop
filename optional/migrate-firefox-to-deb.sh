@@ -83,19 +83,28 @@ EOF
 # instead of Firefox's own flat renderer.
 echo 'user_pref("widget.non-native-theme.enabled", false);' >> "$HOME/.mozilla/firefox/$PROFILE_NAME/user.js"
 
+# Real Firefox is a normal GTK3 app: it scales correctly on its own from
+# Xft.dpi (~/.Xresources), auto-loaded at login. No GDK_SCALE override
+# needed — setting one compounds with Xft.dpi and over-scales the chrome
+# (this is what the snap version couldn't do right in the first place).
 DPI=96
 if command -v xdpyinfo >/dev/null 2>&1 && [ -n "${DISPLAY:-}" ]; then
   DETECTED=$(xdpyinfo 2>/dev/null | sed -n 's/^ *resolution: *\([0-9]*\)x.*/\1/p' | head -1)
   [ -n "${DETECTED:-}" ] && DPI="$DETECTED"
 fi
+if [ -f "$HOME/.Xresources" ]; then
+  grep -v '^Xft\.dpi:' "$HOME/.Xresources" > "$HOME/.Xresources.tmp" || true
+  mv "$HOME/.Xresources.tmp" "$HOME/.Xresources"
+fi
+echo "Xft.dpi: $DPI" >> "$HOME/.Xresources"
+command -v xrdb >/dev/null 2>&1 && [ -n "${DISPLAY:-}" ] && xrdb -merge "$HOME/.Xresources" 2>/dev/null || true
 
 mkdir -p "$HOME/.local/share/applications"
-if [ "$DPI" -ge 120 ]; then
-  echo "-- Detected ${DPI} DPI -- installing a HiDPI-aware launcher override --"
-  sed 's/^Exec=firefox /Exec=env GDK_SCALE=2 GDK_DPI_SCALE=1 firefox /; s#^Exec=/usr/bin/firefox #Exec=env GDK_SCALE=2 GDK_DPI_SCALE=1 /usr/bin/firefox #' \
-    /usr/share/applications/firefox.desktop > "$HOME/.local/share/applications/firefox.desktop"
-else
-  cp /usr/share/applications/firefox.desktop "$HOME/.local/share/applications/firefox.desktop"
+cp /usr/share/applications/firefox.desktop "$HOME/.local/share/applications/firefox.desktop"
+# Chicago95-tux's own "firefox" icon is a themed reskin (not the real Firefox
+# logo); firefox_2 in the same theme is a proper retro rendition of it.
+if [ -f "$HOME/.icons/Chicago95-tux/apps/48/firefox_2.png" ]; then
+  sed -i 's/^Icon=firefox$/Icon=firefox_2/' "$HOME/.local/share/applications/firefox.desktop"
 fi
 cp "$HOME/.local/share/applications/firefox.desktop" "$HOME/Desktop/Firefox.desktop" 2>/dev/null || true
 chmod +x "$HOME/Desktop/Firefox.desktop" 2>/dev/null || true
