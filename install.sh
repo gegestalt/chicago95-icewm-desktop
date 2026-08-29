@@ -7,6 +7,9 @@
 # app grid or macOS Launchpad), HiDPI-correct window chrome, theme-consistent
 # default apps, and a synced GTK3/GTK4/icon-theme setup.
 #
+# Every file this script overwrites is backed up first, and every gsettings
+# key it changes has its old value recorded — see uninstall.sh to revert.
+#
 # Usage:
 #   git clone <this repo> ~/chicago95-icewm-desktop
 #   cd ~/chicago95-icewm-desktop
@@ -29,6 +32,46 @@ echo "== Chicago95 IceWM Desktop installer =="
 echo
 
 # ---------------------------------------------------------------------------
+# 0. Backup tracking. Every destination path this script writes to is passed
+#    through track() first: if it already exists, it's copied into this
+#    run's backup dir and marked EXISTED; otherwise it's marked NEW. Every
+#    gsettings key it changes goes through track_gsetting() the same way.
+#    uninstall.sh replays this manifest in reverse.
+# ---------------------------------------------------------------------------
+STATE_DIR="$HOME/.chicago95-icewm-desktop"
+TS="$(date -u +%Y%m%dT%H%M%SZ 2>/dev/null || echo run)"
+BACKUP_ROOT="$STATE_DIR/backups/$TS"
+MANIFEST="$BACKUP_ROOT/manifest.txt"
+GSETTINGS_RESTORE="$BACKUP_ROOT/gsettings-restore.sh"
+mkdir -p "$BACKUP_ROOT/existed"
+: > "$MANIFEST"
+echo "#!/bin/sh" > "$GSETTINGS_RESTORE"
+
+track() {
+  local path="$1"
+  local rel="${path#/}"
+  if [ -e "$path" ] || [ -L "$path" ]; then
+    mkdir -p "$(dirname "$BACKUP_ROOT/existed/$rel")"
+    cp -a "$path" "$BACKUP_ROOT/existed/$rel"
+    echo "EXISTED $path" >> "$MANIFEST"
+  else
+    echo "NEW $path" >> "$MANIFEST"
+  fi
+}
+
+track_gsetting() {
+  local schema="$1" key="$2"
+  local old
+  old="$(gsettings get "$schema" "$key" 2>/dev/null || true)"
+  if [ -n "$old" ]; then
+    echo "gsettings set $schema $key $old" >> "$GSETTINGS_RESTORE"
+  fi
+}
+
+echo "$TS" > "$STATE_DIR/last-backup"
+echo "-- Backups for this run: $BACKUP_ROOT --"
+
+# ---------------------------------------------------------------------------
 # 1. Prerequisite: the upstream Chicago95 GTK/icon/cursor theme
 # ---------------------------------------------------------------------------
 if [ ! -d "$HOME/.themes/Chicago95" ] || [ ! -d "$HOME/.icons/Chicago95-tux" ]; then
@@ -46,7 +89,8 @@ EOF
 fi
 
 # ---------------------------------------------------------------------------
-# 2. Packages
+# 2. Packages (nothing to back up here — apt tracks its own state, and this
+#    installer never removes a package on its own).
 # ---------------------------------------------------------------------------
 echo "-- Installing packages (sudo required) --"
 sudo apt-get update -qq
@@ -78,19 +122,20 @@ echo "-- Detected ${DPI} DPI -> using $SCALE theme assets --"
 # ---------------------------------------------------------------------------
 echo "-- Installing IceWM config --"
 mkdir -p "$HOME/.icewm/themes"
-cp "$REPO_DIR/dotfiles/icewm/menu" \
-   "$REPO_DIR/dotfiles/icewm/toolbar" \
-   "$REPO_DIR/dotfiles/icewm/preferences" \
-   "$REPO_DIR/dotfiles/icewm/startup" \
-   "$REPO_DIR/dotfiles/icewm/theme" \
-   "$HOME/.icewm/"
+for f in menu toolbar preferences startup theme; do
+  track "$HOME/.icewm/$f"
+  cp "$REPO_DIR/dotfiles/icewm/$f" "$HOME/.icewm/$f"
+done
+track "$HOME/.icewm/prefoverride"
 cp "$REPO_DIR/dotfiles/icewm/prefoverride-$SCALE" "$HOME/.icewm/prefoverride"
+track "$HOME/.icewm/themes/Chicago"
 rm -rf "$HOME/.icewm/themes/Chicago"
 cp -a "$REPO_DIR/dotfiles/icewm/themes-$SCALE/Chicago" "$HOME/.icewm/themes/Chicago"
 chmod +x "$HOME/.icewm/startup"
 
 # Fill in the real home directory (IceWM config files don't expand $HOME).
 sed -i "s#__HOME__#$HOME#g" "$HOME/.icewm/menu" "$HOME/.icewm/toolbar"
+track "$HOME/.icewm/dots6.png"
 cp "$REPO_DIR/icons/chicago95-applications/48.png" "$HOME/.icewm/dots6.png"
 
 # ---------------------------------------------------------------------------
@@ -98,38 +143,49 @@ cp "$REPO_DIR/icons/chicago95-applications/48.png" "$HOME/.icewm/dots6.png"
 # ---------------------------------------------------------------------------
 echo "-- Installing GTK / app-default config --"
 mkdir -p "$HOME/.config/gtk-3.0" "$HOME/.config/gtk-4.0" "$HOME/.config/dunst"
+track "$HOME/.config/gtk-3.0/settings.ini"
 cp "$REPO_DIR/dotfiles/config/gtk-3.0/settings.ini" "$HOME/.config/gtk-3.0/settings.ini"
+track "$HOME/.config/gtk-4.0/settings.ini"
 cp "$REPO_DIR/dotfiles/config/gtk-4.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini"
+track "$HOME/.config/mimeapps.list"
 cp "$REPO_DIR/dotfiles/config/mimeapps.list" "$HOME/.config/mimeapps.list"
+track "$HOME/.config/dunst/dunstrc"
 cp "$REPO_DIR/dotfiles/config/dunst/dunstrc" "$HOME/.config/dunst/dunstrc"
 
 # ---------------------------------------------------------------------------
-# 6. Custom "Applications" grid icon (6-dot glyph), into the icon theme
-#    and the user hicolor fallback (IceWM's own icon lookup is unreliable
-#    by name, but every other consumer — GTK, the desktop icon — uses this).
+# 6. Custom "Applications" grid icon (3x3 glyph), into the icon theme and
+#    the user hicolor fallback (IceWM's own icon lookup is unreliable by
+#    name, but every other consumer — GTK, the desktop icon — uses this).
 # ---------------------------------------------------------------------------
 echo "-- Installing the Applications icon --"
 for sz in 16 22 24 32 48 256; do
   mkdir -p "$HOME/.icons/Chicago95-tux/apps/$sz" "$HOME/.local/share/icons/hicolor/${sz}x${sz}/apps"
+  track "$HOME/.icons/Chicago95-tux/apps/$sz/chicago95-applications.png"
   cp "$REPO_DIR/icons/chicago95-applications/$sz.png" "$HOME/.icons/Chicago95-tux/apps/$sz/chicago95-applications.png"
+  track "$HOME/.local/share/icons/hicolor/${sz}x${sz}/apps/chicago95-applications.png"
   cp "$REPO_DIR/icons/chicago95-applications/$sz.png" "$HOME/.local/share/icons/hicolor/${sz}x${sz}/apps/chicago95-applications.png"
 done
 gtk-update-icon-cache -f "$HOME/.icons/Chicago95-tux" >/dev/null 2>&1 || true
 
 # ---------------------------------------------------------------------------
 # 7. The flat "Applications" grid folder (~/Applications), kept in sync
-#    automatically on every login via .icewm/startup.
+#    automatically on every login via .icewm/startup. build-app-grid only
+#    ever touches symlinks it created itself, so it's safe even if you
+#    already have a real ~/Applications directory — nothing there is backed
+#    up or removed by uninstall.sh.
 # ---------------------------------------------------------------------------
 echo "-- Building the Applications grid (~/Applications) --"
 mkdir -p "$HOME/.local/bin"
+track "$HOME/.local/bin/build-app-grid"
 cp "$REPO_DIR/dotfiles/local/bin/build-app-grid" "$HOME/.local/bin/build-app-grid"
 chmod +x "$HOME/.local/bin/build-app-grid"
 "$HOME/.local/bin/build-app-grid"
 
 # ---------------------------------------------------------------------------
-# 8. Desktop launcher icons
+# 8. Desktop launcher icon
 # ---------------------------------------------------------------------------
 mkdir -p "$HOME/Desktop"
+track "$HOME/Desktop/Applications.desktop"
 cat > "$HOME/Desktop/Applications.desktop" <<EOF
 [Desktop Entry]
 Type=Application
@@ -151,6 +207,9 @@ gio set "$HOME/Desktop/Applications.desktop" metadata::trusted true >/dev/null 2
 # ---------------------------------------------------------------------------
 if command -v gsettings >/dev/null 2>&1; then
   echo "-- Syncing GSettings to Chicago95 --"
+  for key in gtk-theme icon-theme color-scheme font-name document-font-name; do
+    track_gsetting org.gnome.desktop.interface "$key"
+  done
   gsettings set org.gnome.desktop.interface gtk-theme 'Chicago95' 2>/dev/null || true
   gsettings set org.gnome.desktop.interface icon-theme 'Chicago95-tux' 2>/dev/null || true
   gsettings set org.gnome.desktop.interface color-scheme 'default' 2>/dev/null || true
@@ -164,6 +223,7 @@ fi
 if [ -d /etc/lightdm ]; then
   echo "-- Configuring LightDM greeter (sudo required) --"
   sudo mkdir -p /etc/lightdm/lightdm-gtk-greeter.conf.d
+  track /etc/lightdm/lightdm-gtk-greeter.conf.d/50-chicago95-dpi.conf
   sudo tee /etc/lightdm/lightdm-gtk-greeter.conf.d/50-chicago95-dpi.conf >/dev/null <<EOF
 [greeter]
 theme-name=Chicago95
@@ -173,6 +233,7 @@ xft-dpi=$DPI
 xft-hintstyle=hintfull
 xft-rgba=none
 EOF
+  track /usr/share/xsessions/icewm-chicago95.desktop
   sudo cp "$REPO_DIR/system/icewm-chicago95.desktop" /usr/share/xsessions/icewm-chicago95.desktop
 fi
 
@@ -188,6 +249,10 @@ fi
 
 echo
 echo "Done. Log out and pick the 'IceWM Chicago95' session for a clean start."
+echo
+echo "Everything this script overwrote is backed up at:"
+echo "  $BACKUP_ROOT"
+echo "Run ./uninstall.sh to revert this run."
 echo
 echo "Optional next step: run optional/migrate-firefox-to-deb.sh to replace a"
 echo "snap-installed Firefox with the real .deb — snap sandboxing means Firefox"

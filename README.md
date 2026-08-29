@@ -1,5 +1,7 @@
 # Chicago95 IceWM Desktop
 
+[![Lint](https://github.com/gegestalt/chicago95-icewm-desktop/actions/workflows/lint.yml/badge.svg)](https://github.com/gegestalt/chicago95-icewm-desktop/actions/workflows/lint.yml)
+
 A Windows-95/XP-styled IceWM desktop for Ubuntu, built on top of the
 [Chicago95](https://github.com/grassmunk/Chicago95) GTK/icon theme. This repo
 is the post-install layer: a proper Start menu, a real "all apps" grid like
@@ -7,7 +9,7 @@ Ubuntu's app grid or macOS Launchpad, HiDPI-correct window chrome, and every
 default app wired to something that actually matches the theme instead of
 falling back to stock GNOME apps.
 
-![Applications grid](screenshots/applications-grid.png)
+![Demo](screenshots/demo.gif)
 
 ## What it does
 
@@ -66,16 +68,35 @@ Optional, recommended if Firefox is installed as a snap:
 ./optional/migrate-firefox-to-deb.sh
 ```
 
+## Uninstall
+
+Every file `install.sh` overwrites is backed up first, and every GSettings
+key it changes has its previous value recorded, under
+`~/.chicago95-icewm-desktop/backups/<run>/`. To revert the most recent run:
+
+```
+./uninstall.sh
+```
+
+This restores anything that already existed, deletes anything that was newly
+created, and restores the old GSettings values. It leaves the `~/Applications`
+grid folder and any packages `install.sh` installed via apt in place — those
+are harmless to keep around, and removing packages automatically felt like
+the wrong default. Pass a specific run id (a timestamp directory name under
+`backups/`) to revert an older run instead of the latest one.
+
 ## Layout
 
 ```
-install.sh                        main installer (idempotent, DPI-aware)
+install.sh                        main installer (idempotent, DPI-aware, self-backing-up)
+uninstall.sh                      reverts a previous install.sh run
 optional/migrate-firefox-to-deb.sh  snap -> .deb Firefox migration (opt-in)
 dotfiles/icewm/                   menu, toolbar, preferences, theme assets (1x + 2x)
 dotfiles/config/                  gtk-3.0, gtk-4.0, mimeapps.list, dunst
 dotfiles/local/bin/build-app-grid script that (re)builds ~/Applications
 icons/chicago95-applications/     the taskbar "Applications" icon, all sizes
 system/                           lightdm + xsessions entries (sudo-installed)
+.github/workflows/lint.yml        CI: bash -n + ShellCheck on every push/PR
 ```
 
 ## License
