@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>monkeytype clone</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --bg:#323437;
+    --sub:#646669;
+    --sub-alt:#2c2e31;
+    --text:#d1d0c5;
+    --error:#ca4754;
+    --error-extra:#7e2a33;
+    --main:#e2b714;
+    --caret:#e2b714;
+  }
+  *{ box-sizing:border-box; }
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:var(--bg); color:var(--text);
+    font-family:"JetBrains Mono","Roboto Mono",ui-monospace,Consolas,monospace;
+    overflow:hidden;
+    -webkit-user-select:none; user-select:none;
+  }
+  #app{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    height:100%; width:100%; padding:0 24px;
+  }
+  header{
+    position:fixed; top:28px; left:32px; display:flex; align-items:baseline; gap:10px;
+    color:var(--sub);
+  }
+  header .logo{ color:var(--main); font-weight:700; font-size:22px; letter-spacing:-0.5px; }
+  header .tag{ font-size:13px; }
+
+  #topbar{
+    display:flex; gap:18px; align-items:center; justify-content:center;
+    color:var(--sub); font-size:13px; margin-bottom:36px; user-select:none;
+  }
+  #topbar .group{ display:flex; gap:14px; padding:6px 12px; border-radius:6px; background:var(--sub-alt); }
+  #topbar button{
+    background:none; border:none; color:var(--sub); font:inherit; cursor:pointer; padding:2px 4px;
+  }
+  #topbar button.active{ color:var(--main); }
+  #topbar button:hover{ color:var(--text); }
+  #topbar .sep{ color:#4a4c4f; }
+
+  #stage{ width:min(860px, 90vw); }
+
+  #liveStats{
+    display:flex; gap:28px; font-size:34px; color:var(--main); font-weight:600;
+    height:44px; margin-bottom:8px; opacity:0; transition:opacity .15s;
+  }
+  #liveStats.show{ opacity:1; }
+  #liveStats span.unit{ font-size:16px; color:var(--sub); margin-left:6px; font-weight:400; }
+
+  #words{
+    font-size:28px; line-height:1.7; letter-spacing:0.5px;
+    filter:blur(0); transition:filter .2s;
+    max-height:5.1em; overflow:hidden; position:relative;
+  }
+  #words.blurred{ filter:blur(4px); }
+  .word{ display:inline-block; margin:0 8px 0 0; position:relative; }
+  .word .letter{ color:var(--sub); }
+  .word .letter.correct{ color:var(--text); }
+  .word .letter.incorrect{ color:var(--error); text-decoration:underline; text-decoration-color:var(--error); }
+  .word .letter.extra{ color:var(--error-extra); }
+  .caret{
+    display:inline-block; width:2px; background:var(--caret); margin-left:-1px;
+    animation:blink 1s steps(2) infinite; vertical-align:text-bottom;
+  }
+  @keyframes blink{ 0%,50%{opacity:1;} 51%,100%{opacity:0;} }
+
+  #hint{ margin-top:26px; color:var(--sub); font-size:13px; text-align:center; min-height:18px; }
+  #hint kbd{ background:var(--sub-alt); border-radius:4px; padding:1px 6px; color:var(--text); }
+
+  #result{
+    display:none; flex-direction:column; align-items:center; gap:18px; width:min(860px,90vw);
+  }
+  #result.show{ display:flex; }
+  #stage.hide{ display:none; }
+  .resultGrid{ display:flex; gap:56px; }
+  .resultGrid .stat .big{ font-size:56px; color:var(--main); font-weight:700; line-height:1; }
+  .resultGrid .stat .label{ color:var(--sub); font-size:13px; margin-top:6px; }
+  .resultGrid .stat.secondary .big{ font-size:34px; color:var(--text); }
+  #resultRestart{
+    margin-top:10px; background:var(--sub-alt); color:var(--text); border:none; border-radius:8px;
+    padding:12px 20px; cursor:pointer; font:inherit;
+  }
+  #resultRestart:hover{ background:#3a3d40; }
+
+  footer{
+    position:fixed; bottom:20px; left:0; right:0; text-align:center; color:var(--sub); font-size:12px;
+  }
+  #app.typing header, #app.typing #topbar, #app.typing footer{ opacity:0.15; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header><span class="logo">monkeytype</span><span class="tag">clone // chicago95-icewm-desktop</span></header>
+
+  <div id="topbar">
+    <div class="group" id="modeGroup">
+      <button data-mode="time" class="active">time</button>
+      <span class="sep">|</span>
+      <button data-mode="words">words</button>
+    </div>
+    <div class="group" id="valueGroup">
+      <button data-value="15">15</button>
+      <button data-value="30" class="active">30</button>
+      <button data-value="60">60</button>
+      <button data-value="120">120</button>
+    </div>
+  </div>
+
+  <div id="stage">
+    <div id="liveStats"><div><span id="liveWpm">0</span><span class="unit">wpm</span></div><div><span id="liveAcc">100</span><span class="unit">% acc</span></div></div>
+    <div id="words" tabindex="0"></div>
+  </div>
+
+  <div id="result">
+    <div class="resultGrid">
+      <div class="stat"><div class="big" id="rWpm">0</div><div class="label">wpm</div></div>
+      <div class="stat"><div class="big" id="rAcc">0%</div><div class="label">accuracy</div></div>
+      <div class="stat secondary"><div class="big" id="rRaw">0</div><div class="label">raw</div></div>
+      <div class="stat secondary"><div class="big" id="rChars">0/0/0/0</div><div class="label">correct/incorrect/extra/missed</div></div>
+      <div class="stat secondary"><div class="big" id="rTime">0s</div><div class="label">time</div></div>
+    </div>
+    <button id="resultRestart">restart — tab</button>
+  </div>
+
+  <div id="hint">type to start &nbsp;•&nbsp; <kbd>tab</kbd> restart &nbsp;•&nbsp; <kbd>esc</kbd> stop</div>
+  <footer>a from-scratch clone built for the Chicago95 IceWM desktop, not affiliated with the real monkeytype</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var WORDLIST = ("the be to of and a in that have I it for not on with he as you do at "+
+    "this but his by from they we say her she or an will my one all would there their what "+
+    "so up out if about who get which go me when make can like time no just him know take "+
+    "people into year your good some could them see other than then now look only come its "+
+    "over think also back after use two how our work first well way even new want because "+
+    "any these give day most us is water long find here thing great man world life still "+
+    "hand part child eye woman place work week case point government company number group "+
+    "problem fact be seem feel try leave call good sentence write music word question answer "+
+    "system program idea power play move build report keep student begin against door lead "+
+    "example cost speak set light nature ability across around bring choose city color "+
+    "computer country develop draw drink drive early east energy enough factor family "+
+    "father figure film final float floor flower follow food force form friend front fruit "+
+    "garden general glass grow happy heart heavy history house image image increase "+
+    "industry inside just kind knowledge land language large late later laugh law learn "+
+    "leaf letter level line list listen little local machine market marry material matter "+
+    "maybe mean measure meet member mental message method middle mind minute model modern "+
+    "moment money morning mother mountain mouth move music name nation nature near need "+
+    "network news night north nothing notice number object ocean office often open order "+
+    "organize outside page paint paper parent pattern pay peace period person phone "+
+    "picture piece plan plant player point police policy political poor popular position "+
+    "positive possible practice prepare present president pressure pretty prevent price "+
+    "probably process produce product program project protect prove provide public purpose "+
+    "quality quickly quite race radio raise range rate rather reach read ready real reason "+
+    "receive recent recognize record reduce reflect region relate remain remember report "+
+    "represent require research resource respond rest result return reveal rich right rise "+
+    "risk road role room rule run safe scene school science season seat second section see "+
+    "seek seem sell send sense series serious serve service several shake shape share short "+
+    "shoulder show side sign similar simple since sing single sister site situation size "+
+    "skill skin small smile social society soldier some song soon sort sound source south "+
+    "space speak special specific speed spend sport spring staff stage stand standard star "+
+    "start state statement station stay step still stock stop store story strategy street "+
+    "strong structure student study stuff style subject success such suffer suggest summer "+
+    "support sure surface system table talk task teach teacher team technology television "+
+    "tell tend term test than thank themselves theory there therefore thick thin thing think "+
+    "third those though thought thousand threat through throughout throw thus today "+
+    "together tonight top total tough toward town trade traditional training travel treat "+
+    "tree trial trip trouble true truth turn type under understand unit until upon use "+
+    "usually value various very view visit voice vote wait walk wall want watch water wear "+
+    "week weight well west western whatever whether while white whole whom whose wide wife "+
+    "will win wind window wish within without woman wonder word work worker world worry "+
+    "would write wrong yard yeah year yet young").split(/\s+/);
+
+  var state = {
+    mode: "time",
+    value: 30,
+    words: [],
+    typed: [],       // array of strings typed per word index
+    cur: 0,          // current word index
+    started: false,
+    startTime: 0,
+    timer: null,
+    remaining: 30,
+    correctChars: 0,
+    incorrectChars: 0,
+    extraChars: 0,
+    missedChars: 0,
+    keystrokes: 0,
+    correctKeystrokes: 0
+  };
+
+  var wordsEl = document.getElementById("words");
+  var appEl = document.getElementById("app");
+  var liveStats = document.getElementById("liveStats");
+  var liveWpm = document.getElementById("liveWpm");
+  var liveAcc = document.getElementById("liveAcc");
+  var resultEl = document.getElementById("result");
+  var stageEl = document.getElementById("stage");
+  var hintEl = document.getElementById("hint");
+
+  function randomWord(){ return WORDLIST[Math.floor(Math.random()*WORDLIST.length)]; }
+
+  function genWords(n){
+    var out = [];
+    for (var i=0;i<n;i++) out.push(randomWord());
+    return out;
+  }
+
+  function buildWordCount(){
+    if (state.mode === "words") return state.value;
+    return 220; // plenty for any time mode; we just render more than needed
+  }
+
+  function render(){
+    wordsEl.innerHTML = "";
+    for (var i=0;i<state.words.length;i++){
+      var w = state.words[i];
+      var typed = state.typed[i] || "";
+      var wordDiv = document.createElement("span");
+      wordDiv.className = "word";
+      wordDiv.dataset.index = i;
+
+      var maxLen = Math.max(w.length, typed.length);
+      for (var j=0;j<maxLen;j++){
+        var span = document.createElement("span");
+        span.className = "letter";
+        if (j < w.length){
+          span.textContent = w[j];
+          if (j < typed.length){
+            span.classList.add(typed[j] === w[j] ? "correct" : "incorrect");
+          }
+        } else {
+          span.textContent = typed[j];
+          span.classList.add("extra");
+        }
+        if (i === state.cur && j === typed.length){
+          var caret = document.createElement("span");
+          caret.className = "caret";
+          wordDiv.appendChild(caret);
+        }
+        wordDiv.appendChild(span);
+      }
+      if (i === state.cur && typed.length >= w.length){
+        var caret2 = document.createElement("span");
+        caret2.className = "caret";
+        wordDiv.appendChild(caret2);
+      }
+      wordsEl.appendChild(wordDiv);
+    }
+  }
+
+  function reset(){
+    clearInterval(state.timer);
+    state.words = genWords(buildWordCount());
+    state.typed = [];
+    state.cur = 0;
+    state.started = false;
+    state.remaining = state.value;
+    state.correctChars = 0;
+    state.incorrectChars = 0;
+    state.extraChars = 0;
+    state.missedChars = 0;
+    state.keystrokes = 0;
+    state.correctKeystrokes = 0;
+    liveStats.classList.remove("show");
+    liveWpm.textContent = "0";
+    liveAcc.textContent = "100";
+    resultEl.classList.remove("show");
+    stageEl.classList.remove("hide");
+    appEl.classList.remove("typing");
+    hintEl.textContent = "type to start   •   tab restart   •   esc stop";
+    render();
+  }
+
+  function startIfNeeded(){
+    if (state.started) return;
+    state.started = true;
+    state.startTime = Date.now();
+    appEl.classList.add("typing");
+    liveStats.classList.add("show");
+    if (state.mode === "time"){
+      state.timer = setInterval(tick, 250);
+    }
+  }
+
+  function elapsedSeconds(){ return (Date.now() - state.startTime) / 1000; }
+
+  function currentWpm(){
+    var mins = Math.max(elapsedSeconds()/60, 1/600);
+    return Math.round((state.correctKeystrokes/5) / mins);
+  }
+  function currentAcc(){
+    if (state.keystrokes === 0) return 100;
+    return Math.round((state.correctKeystrokes/state.keystrokes)*100);
+  }
+
+  function tick(){
+    var elapsed = elapsedSeconds();
+    state.remaining = Math.max(0, state.value - elapsed);
+    liveWpm.textContent = currentWpm();
+    liveAcc.textContent = currentAcc();
+    if (state.remaining <= 0) finish();
+  }
+
+  function finish(){
+    clearInterval(state.timer);
+    // count the in-progress word's diff too
+    tallyWord(state.cur, true);
+    var mins = Math.max(elapsedSeconds()/60, 1/600);
+    var rawWpm = Math.round(((state.correctChars+state.incorrectChars+state.extraChars)/5)/mins);
+    var netWpm = Math.round((state.correctChars/5)/mins);
+    var totalTyped = state.correctChars+state.incorrectChars;
+    var acc = totalTyped === 0 ? 100 : Math.round((state.correctChars/(totalTyped))*100);
+
+    document.getElementById("rWpm").textContent = netWpm;
+    document.getElementById("rAcc").textContent = acc + "%";
+    document.getElementById("rRaw").textContent = rawWpm;
+    document.getElementById("rChars").textContent =
+      state.correctChars+"/"+state.incorrectChars+"/"+state.extraChars+"/"+state.missedChars;
+    document.getElementById("rTime").textContent = Math.round(elapsedSeconds())+"s";
+
+    stageEl.classList.add("hide");
+    liveStats.classList.remove("show");
+    resultEl.classList.add("show");
+    appEl.classList.remove("typing");
+    hintEl.textContent = "tab restart";
+  }
+
+  function tallyWord(i, isCurrentIncomplete){
+    var w = state.words[i];
+    var typed = state.typed[i] || "";
+    if (!w) return;
+    var len = Math.max(w.length, typed.length);
+    for (var j=0;j<len;j++){
+      if (j < w.length && j < typed.length){
+        if (typed[j] === w[j]) state.correctChars++; else state.incorrectChars++;
+      } else if (j >= w.length){
+        state.extraChars++;
+      } else if (isCurrentIncomplete){
+        state.missedChars++;
+      }
+    }
+  }
+
+  function nextWord(){
+    tallyWord(state.cur, false);
+    state.cur++;
+    if (state.mode === "words" && state.cur >= state.value){
+      finish();
+      return;
+    }
+    if (state.cur >= state.words.length - 10){
+      state.words = state.words.concat(genWords(60));
+    }
+  }
+
+  function onKeydown(e){
+    if (e.key === "Tab"){ e.preventDefault(); reset(); return; }
+    if (e.key === "Escape"){ e.preventDefault(); finish(); return; }
+    if (resultEl.classList.contains("show")) return;
+
+    if (e.key === "Backspace"){
+      e.preventDefault();
+      var t = state.typed[state.cur] || "";
+      if (t.length > 0){
+        state.typed[state.cur] = t.slice(0, -1);
+      } else if (state.cur > 0 && (state.typed[state.cur-1]||"").length > state.words[state.cur-1].length){
+        // allow correcting into previous word only if it had extra chars
+        state.cur--;
+      }
+      render();
+      return;
+    }
+    if (e.key === " "){
+      e.preventDefault();
+      if ((state.typed[state.cur]||"").length === 0) return;
+      startIfNeeded();
+      nextWord();
+      render();
+      return;
+    }
+    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey){
+      e.preventDefault();
+      startIfNeeded();
+      var cw = state.words[state.cur];
+      var t2 = state.typed[state.cur] || "";
+      if (t2.length < cw.length + 10){
+        state.typed[state.cur] = t2 + e.key;
+        state.keystrokes++;
+        if (t2.length < cw.length && cw[t2.length] === e.key) state.correctKeystrokes++;
+      }
+      liveWpm.textContent = currentWpm();
+      liveAcc.textContent = currentAcc();
+      render();
+    }
+  }
+
+  document.getElementById("resultRestart").addEventListener("click", reset);
+  document.getElementById("modeGroup").addEventListener("click", function(e){
+    var b = e.target.closest("button"); if (!b) return;
+    document.querySelectorAll("#modeGroup button").forEach(function(x){x.classList.remove("active");});
+    b.classList.add("active");
+    state.mode = b.dataset.mode;
+    document.querySelectorAll("#valueGroup button").forEach(function(x){
+      x.textContent = state.mode === "time" ? {15:"15",30:"30",60:"60",120:"120"}[x.dataset.value] || x.dataset.value : x.dataset.value;
+    });
+    var defaults = state.mode === "time" ? "30" : "25";
+    var vg = document.getElementById("valueGroup");
+    if (state.mode === "words"){
+      vg.innerHTML = '<button data-value="10">10</button><button data-value="25" class="active">25</button><button data-value="50">50</button><button data-value="100">100</button>';
+      state.value = 25;
+    } else {
+      vg.innerHTML = '<button data-value="15">15</button><button data-value="30" class="active">30</button><button data-value="60">60</button><button data-value="120">120</button>';
+      state.value = 30;
+    }
+    reset();
+  });
+  document.getElementById("valueGroup").addEventListener("click", function(e){
+    var b = e.target.closest("button"); if (!b) return;
+    document.querySelectorAll("#valueGroup button").forEach(function(x){x.classList.remove("active");});
+    b.classList.add("active");
+    state.value = parseInt(b.dataset.value, 10);
+    reset();
+  });
+
+  window.addEventListener("keydown", onKeydown);
+  window.addEventListener("blur", function(){ if(state.started) clearInterval(state.timer); });
+
+  reset();
+})();
+</script>
+</body>
+</html>

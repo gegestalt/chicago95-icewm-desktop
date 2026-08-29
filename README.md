@@ -31,6 +31,14 @@ falling back to stock GNOME apps.
 - **GSettings synced** to the theme so GTK4/portal-aware apps stop falling
   back to Yaru/Adwaita.
 - **LightDM greeter** configured for Chicago95 with the correct DPI.
+- **A game.** `games/monkeytype-clone` — a from-scratch typing-speed test
+  (word-by-word correct/incorrect highlighting, live WPM/accuracy, time and
+  word-count modes) built to look and feel like the real Monkeytype. It's a
+  single self-contained HTML file with no build step and no network
+  dependency, runs in Firefox, and lands on the Start menu and Desktop as
+  "Typing Test."
+
+  ![Typing Test](screenshots/typing-test.png)
 
 ## What it doesn't do
 
@@ -95,6 +103,7 @@ dotfiles/icewm/                   menu, toolbar, preferences, theme assets (1x +
 dotfiles/config/                  gtk-3.0, gtk-4.0, mimeapps.list, dunst
 dotfiles/local/bin/build-app-grid script that (re)builds ~/Applications
 icons/chicago95-applications/     the taskbar "Applications" icon, all sizes
+games/monkeytype-clone/           self-contained typing-test game (no deps)
 system/                           lightdm + xsessions entries (sudo-installed)
 .github/workflows/lint.yml        CI: bash -n + ShellCheck on every push/PR
 ```

@@ -202,7 +202,32 @@ chmod +x "$HOME/Desktop/Applications.desktop"
 gio set "$HOME/Desktop/Applications.desktop" metadata::trusted true >/dev/null 2>&1 || true
 
 # ---------------------------------------------------------------------------
-# 9. GSettings (affects GTK4/portal-aware apps and anything reading the
+# 9. Games — a from-scratch typing-test clone (not affiliated with the real
+#    Monkeytype), runs as a local HTML file in Firefox, no server needed.
+# ---------------------------------------------------------------------------
+echo "-- Installing games --"
+GAMES_DIR="$HOME/.local/share/chicago95-icewm-desktop/games/monkeytype-clone"
+mkdir -p "$GAMES_DIR"
+track "$GAMES_DIR"
+cp -a "$REPO_DIR/games/monkeytype-clone/." "$GAMES_DIR/"
+track "$HOME/Desktop/Typing Test.desktop"
+cat > "$HOME/Desktop/Typing Test.desktop" <<EOF
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Typing Test
+Comment=A from-scratch typing-speed test, not affiliated with the real Monkeytype
+Exec=env GDK_SCALE=2 GDK_DPI_SCALE=1 firefox --new-window "file://$GAMES_DIR/index.html"
+Icon=$GAMES_DIR/icon.png
+Terminal=false
+StartupNotify=true
+Categories=Game;
+EOF
+chmod +x "$HOME/Desktop/Typing Test.desktop"
+gio set "$HOME/Desktop/Typing Test.desktop" metadata::trusted true >/dev/null 2>&1 || true
+
+# ---------------------------------------------------------------------------
+# 10. GSettings (affects GTK4/portal-aware apps and anything reading the
 #    freedesktop interface schema, independent of IceWM's own config files)
 # ---------------------------------------------------------------------------
 if command -v gsettings >/dev/null 2>&1; then
@@ -218,7 +243,7 @@ if command -v gsettings >/dev/null 2>&1; then
 fi
 
 # ---------------------------------------------------------------------------
-# 10. LightDM greeter (only if LightDM is already the display manager)
+# 11. LightDM greeter (only if LightDM is already the display manager)
 # ---------------------------------------------------------------------------
 if [ -d /etc/lightdm ]; then
   echo "-- Configuring LightDM greeter (sudo required) --"
@@ -238,7 +263,7 @@ EOF
 fi
 
 # ---------------------------------------------------------------------------
-# 11. Hot-reload if IceWM is already running in this session
+# 12. Hot-reload if IceWM is already running in this session
 # ---------------------------------------------------------------------------
 if pgrep -x icewm >/dev/null 2>&1; then
   killall -SIGHUP icewm || true
