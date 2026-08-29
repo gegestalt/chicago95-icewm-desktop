@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>monkeytype clone</title>
+<title>clacktype</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   :root{
@@ -80,6 +80,23 @@
   }
   #result.show{ display:flex; }
   #stage.hide{ display:none; }
+
+  #graphWrap{ width:100%; position:relative; }
+  #graphSvg{ width:100%; height:200px; display:block; }
+  #graphSvg .grid{ stroke:var(--sub-alt); stroke-width:1; }
+  #graphSvg .axisLabel{ fill:var(--sub); font-size:11px; font-family:inherit; }
+  #graphSvg .lineWpm{ fill:none; stroke:var(--main); stroke-width:2.5; }
+  #graphSvg .lineRaw{ fill:none; stroke:var(--sub); stroke-width:1.5; stroke-dasharray:4 3; }
+  #graphSvg .errTick{ stroke:var(--error); stroke-width:2; }
+  #graphLegend{
+    position:absolute; top:0; right:6px; display:flex; gap:16px; font-size:12px; color:var(--sub);
+  }
+  #graphLegend .swatch{
+    display:inline-block; width:12px; height:2px; margin-right:5px; vertical-align:middle;
+  }
+  #graphLegend .swatch.main{ background:var(--main); }
+  #graphLegend .swatch.raw{ background:var(--sub); }
+
   .resultGrid{ display:flex; gap:56px; }
   .resultGrid .stat .big{ font-size:56px; color:var(--main); font-weight:700; line-height:1; }
   .resultGrid .stat .label{ color:var(--sub); font-size:13px; margin-top:6px; }
@@ -98,7 +115,7 @@
 </head>
 <body>
 <div id="app">
-  <header><span class="logo">monkeytype</span><span class="tag">clone // chicago95-icewm-desktop</span></header>
+  <header><span class="logo">clacktype</span><span class="tag">a typing speed test // chicago95-icewm-desktop</span></header>
 
   <div id="topbar">
     <div class="group" id="modeGroup">
@@ -120,6 +137,13 @@
   </div>
 
   <div id="result">
+    <div id="graphWrap">
+      <svg id="graphSvg" viewBox="0 0 640 200" preserveAspectRatio="none"></svg>
+      <div id="graphLegend">
+        <span><i class="swatch main"></i>wpm</span>
+        <span><i class="swatch raw"></i>raw</span>
+      </div>
+    </div>
     <div class="resultGrid">
       <div class="stat"><div class="big" id="rWpm">0</div><div class="label">wpm</div></div>
       <div class="stat"><div class="big" id="rAcc">0%</div><div class="label">accuracy</div></div>
@@ -131,7 +155,7 @@
   </div>
 
   <div id="hint">type to start &nbsp;•&nbsp; <kbd>tab</kbd> restart &nbsp;•&nbsp; <kbd>esc</kbd> stop</div>
-  <footer>a from-scratch clone built for the Chicago95 IceWM desktop, not affiliated with the real monkeytype</footer>
+  <footer>clacktype — a typing speed test built for the Chicago95 IceWM desktop</footer>
 </div>
 
 <script>
@@ -189,13 +213,16 @@
     started: false,
     startTime: 0,
     timer: null,
+    graphTimer: null,
     remaining: 30,
     correctChars: 0,
     incorrectChars: 0,
     extraChars: 0,
     missedChars: 0,
     keystrokes: 0,
-    correctKeystrokes: 0
+    correctKeystrokes: 0,
+    history: [],     // [{t, wpm, raw}] sampled ~once/sec for the results graph
+    errorTicks: []   // [t, ...] seconds-into-test where a wrong keystroke happened
   };
 
   var wordsEl = document.getElementById("words");
@@ -271,6 +298,9 @@
     state.missedChars = 0;
     state.keystrokes = 0;
     state.correctKeystrokes = 0;
+    state.history = [];
+    state.errorTicks = [];
+    clearInterval(state.graphTimer);
     liveStats.classList.remove("show");
     liveWpm.textContent = "0";
     liveAcc.textContent = "100";
@@ -290,6 +320,8 @@
     if (state.mode === "time"){
       state.timer = setInterval(tick, 250);
     }
+    // Samples once/sec regardless of mode, purely to feed the results graph.
+    state.graphTimer = setInterval(sampleGraph, 1000);
   }
 
   function elapsedSeconds(){ return (Date.now() - state.startTime) / 1000; }
@@ -298,9 +330,17 @@
     var mins = Math.max(elapsedSeconds()/60, 1/600);
     return Math.round((state.correctKeystrokes/5) / mins);
   }
+  function currentRawWpm(){
+    var mins = Math.max(elapsedSeconds()/60, 1/600);
+    return Math.round((state.keystrokes/5) / mins);
+  }
   function currentAcc(){
     if (state.keystrokes === 0) return 100;
     return Math.round((state.correctKeystrokes/state.keystrokes)*100);
+  }
+
+  function sampleGraph(){
+    state.history.push({ t: elapsedSeconds(), wpm: currentWpm(), raw: currentRawWpm() });
   }
 
   function tick(){
@@ -313,8 +353,10 @@
 
   function finish(){
     clearInterval(state.timer);
+    clearInterval(state.graphTimer);
     // count the in-progress word's diff too
     tallyWord(state.cur, true);
+    sampleGraph();
     var mins = Math.max(elapsedSeconds()/60, 1/600);
     var rawWpm = Math.round(((state.correctChars+state.incorrectChars+state.extraChars)/5)/mins);
     var netWpm = Math.round((state.correctChars/5)/mins);
@@ -327,12 +369,76 @@
     document.getElementById("rChars").textContent =
       state.correctChars+"/"+state.incorrectChars+"/"+state.extraChars+"/"+state.missedChars;
     document.getElementById("rTime").textContent = Math.round(elapsedSeconds())+"s";
+    renderGraph();
 
     stageEl.classList.add("hide");
     liveStats.classList.remove("show");
     resultEl.classList.add("show");
     appEl.classList.remove("typing");
     hintEl.textContent = "tab restart";
+  }
+
+  var SVGNS = "http://www.w3.org/2000/svg";
+  function renderGraph(){
+    var svg = document.getElementById("graphSvg");
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var W = 640, H = 200, padL = 34, padB = 20, padT = 10, padR = 6;
+    var plotW = W - padL - padR, plotH = H - padT - padB;
+
+    var pts = state.history.length ? state.history : [{t:0.01, wpm:0, raw:0}];
+    var maxT = Math.max(pts[pts.length-1].t, 1);
+    var maxWpm = 10;
+    pts.forEach(function(p){ maxWpm = Math.max(maxWpm, p.wpm, p.raw); });
+    maxWpm = Math.ceil(maxWpm/10)*10;
+
+    function x(t){ return padL + (t/maxT)*plotW; }
+    function y(w){ return padT + plotH - (w/maxWpm)*plotH; }
+
+    // gridlines + y-axis labels (0, mid, max)
+    [0, 0.5, 1].forEach(function(f){
+      var yy = padT + plotH - f*plotH;
+      var line = document.createElementNS(SVGNS, "line");
+      line.setAttribute("class", "grid");
+      line.setAttribute("x1", padL); line.setAttribute("x2", W-padR);
+      line.setAttribute("y1", yy); line.setAttribute("y2", yy);
+      svg.appendChild(line);
+      var label = document.createElementNS(SVGNS, "text");
+      label.setAttribute("class", "axisLabel");
+      label.setAttribute("x", 2); label.setAttribute("y", yy+4);
+      label.textContent = Math.round(maxWpm*f);
+      svg.appendChild(label);
+    });
+
+    function poly(cls, key){
+      var d = pts.map(function(p){ return x(p.t)+","+y(p[key]); }).join(" ");
+      var pl = document.createElementNS(SVGNS, "polyline");
+      pl.setAttribute("class", cls);
+      pl.setAttribute("points", d);
+      svg.appendChild(pl);
+    }
+    poly("lineRaw", "raw");
+    poly("lineWpm", "wpm");
+
+    // error ticks along the bottom axis
+    state.errorTicks.forEach(function(t){
+      var xx = x(t);
+      var tickEl = document.createElementNS(SVGNS, "line");
+      tickEl.setAttribute("class", "errTick");
+      tickEl.setAttribute("x1", xx); tickEl.setAttribute("x2", xx);
+      tickEl.setAttribute("y1", padT+plotH); tickEl.setAttribute("y2", padT+plotH+6);
+      svg.appendChild(tickEl);
+    });
+
+    // x-axis time labels
+    var steps = maxT <= 20 ? 5 : Math.ceil(maxT/6);
+    for (var t=0; t<=maxT+0.01; t+=steps){
+      var lbl = document.createElementNS(SVGNS, "text");
+      lbl.setAttribute("class", "axisLabel");
+      lbl.setAttribute("x", x(t)); lbl.setAttribute("y", H-4);
+      lbl.setAttribute("text-anchor", "middle");
+      lbl.textContent = Math.round(t)+"s";
+      svg.appendChild(lbl);
+    }
   }
 
   function tallyWord(i, isCurrentIncomplete){
@@ -396,7 +502,11 @@
       if (t2.length < cw.length + 10){
         state.typed[state.cur] = t2 + e.key;
         state.keystrokes++;
-        if (t2.length < cw.length && cw[t2.length] === e.key) state.correctKeystrokes++;
+        if (t2.length < cw.length && cw[t2.length] === e.key){
+          state.correctKeystrokes++;
+        } else {
+          state.errorTicks.push(elapsedSeconds());
+        }
       }
       liveWpm.textContent = currentWpm();
       liveAcc.textContent = currentAcc();
