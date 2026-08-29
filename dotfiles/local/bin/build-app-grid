@@ -1,0 +1,21 @@
+#!/bin/bash
+# Builds ~/Applications as a flat, single-page grid of every installed app
+# (symlinks to .desktop files), like macOS's /Applications or Ubuntu's app grid.
+set -e
+TARGET="$HOME/Applications"
+mkdir -p "$TARGET"
+find "$TARGET" -maxdepth 1 -type l -delete
+
+declare -A seen
+for dir in "$HOME/.local/share/applications" /usr/local/share/applications /usr/share/applications /var/lib/snapd/desktop/applications; do
+  [ -d "$dir" ] || continue
+  for f in "$dir"/*.desktop; do
+    [ -f "$f" ] || continue
+    id=$(basename "$f")
+    [ -n "${seen[$id]}" ] && continue
+    grep -q '^NoDisplay=true' "$f" 2>/dev/null && continue
+    grep -q '^Hidden=true' "$f" 2>/dev/null && continue
+    seen[$id]=1
+    ln -sf "$f" "$TARGET/$id"
+  done
+done

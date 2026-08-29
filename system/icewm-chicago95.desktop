@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=IceWM Chicago95
+Comment=IceWM with Chicago95 desktop
+Exec=icewm-session
+TryExec=icewm-session
+Type=Application
+DesktopNames=ICEWM

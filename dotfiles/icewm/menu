@@ -1,0 +1,29 @@
+prog "Applications" __HOME__/.icewm/dots6.png pcmanfm "__HOME__/Applications"
+prog "Alacritty" utilities-terminal alacritty
+prog "Files" system-file-manager pcmanfm
+prog "My Documents" folder-documents pcmanfm "__HOME__"
+
+separator
+
+menuprog "Programs" folder icewm-menu-fdo
+
+separator
+
+prog "Firefox" firefox env GDK_SCALE=2 GDK_DPI_SCALE=1 firefox
+prog "Sublime Text" sublime-text subl
+prog "Image Viewer" gpicview gpicview
+prog "Document Viewer" evince evince
+prog "Media Player" mpv mpv
+
+separator
+
+# Add your own project shortcuts here, e.g.:
+# prog "My Project" folder pcmanfm "__HOME__/path/to/project"
+
+separator
+
+prog "Settings" xfce4-settings xfce4-settings-manager
+
+separator
+
+prog "Log Out" system-log-out icewm-session --logout

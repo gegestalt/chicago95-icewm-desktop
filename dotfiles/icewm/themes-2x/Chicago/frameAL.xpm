@@ -1,0 +1,17 @@
+/* XPM */
+static char *frameAL[] = {
+/* columns rows colors chars-per-pixel */
+"8 8 3 1 ",
+"  c gray74",
+". c gray87",
+"X c white",
+/* pixels */
+"..XX    ",
+"..XX    ",
+"..XX    ",
+"..XX    ",
+"..XX    ",
+"..XX    ",
+"..XX    ",
+"..XX    "
+};

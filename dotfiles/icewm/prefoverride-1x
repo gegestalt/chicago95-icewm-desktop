@@ -1,0 +1,37 @@
+# Chicago95 standard-DPI overrides (~96 DPI displays).
+# Values here override the active IceWM theme. Matches the native pixel
+# size of the theme's own xpm assets (themes-1x/Chicago) 1:1.
+
+SmallIconSize=16
+LargeIconSize=32
+HugeIconSize=48
+MenuIconSize=16
+
+TitleBarHeight=18
+
+BorderSizeX=4
+BorderSizeY=4
+DlgBorderSizeX=4
+DlgBorderSizeY=4
+
+ScrollBarX=16
+ScrollBarY=16
+
+TrayIconMaxWidth=20
+TrayIconMaxHeight=20
+
+TitleFontNameXft="Adwaita Sans:size=10"
+MenuFontNameXft="Adwaita Sans:size=10"
+StatusFontNameXft="Adwaita Sans:size=10"
+QuickSwitchFontNameXft="Adwaita Sans:size=10"
+
+NormalButtonFontNameXft="Adwaita Sans:size=10"
+ActiveButtonFontNameXft="Adwaita Sans:bold:size=10"
+
+NormalTaskBarFontNameXft="Adwaita Sans:size=10"
+ActiveTaskBarFontNameXft="Adwaita Sans:bold:size=10"
+
+ClockFontNameXft="Adwaita Sans:size=10"
+ToolTipFontNameXft="Adwaita Sans:size=10"
+InputFontNameXft="Adwaita Sans:size=10"
+LabelFontNameXft="Adwaita Sans:size=10"

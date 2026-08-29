@@ -1,0 +1,37 @@
+# Chicago95 HiDPI overrides.
+# Values here override the active IceWM theme.
+
+SmallIconSize=48
+LargeIconSize=64
+HugeIconSize=96
+MenuIconSize=32
+
+TitleBarHeight=36
+
+BorderSizeX=8
+BorderSizeY=8
+DlgBorderSizeX=8
+DlgBorderSizeY=8
+
+ScrollBarX=28
+ScrollBarY=28
+
+TrayIconMaxWidth=40
+TrayIconMaxHeight=40
+TaskBarGraphHeight=38
+
+TitleFontNameXft="Adwaita Sans:size=17"
+MenuFontNameXft="Adwaita Sans:size=17"
+StatusFontNameXft="Adwaita Sans:size=17"
+QuickSwitchFontNameXft="Adwaita Sans:size=17"
+
+NormalButtonFontNameXft="Adwaita Sans:size=17"
+ActiveButtonFontNameXft="Adwaita Sans:bold:size=17"
+
+NormalTaskBarFontNameXft="Adwaita Sans:size=17"
+ActiveTaskBarFontNameXft="Adwaita Sans:bold:size=17"
+
+ClockFontNameXft="Adwaita Sans:size=16"
+ToolTipFontNameXft="Adwaita Sans:size=16"
+InputFontNameXft="Adwaita Sans:size=17"
+LabelFontNameXft="Adwaita Sans:size=17"

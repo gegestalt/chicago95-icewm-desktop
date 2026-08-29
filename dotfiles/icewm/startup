@@ -1,0 +1,20 @@
+#!/bin/sh
+
+export GTK_THEME=Chicago95
+
+# Keep the flat "Applications" grid (~/Applications) in sync with installed apps.
+"$HOME/.local/bin/build-app-grid" &
+
+# Desktop icons / file manager.
+pcmanfm --desktop --profile=icewm &
+
+# Notifications.
+dunst &
+
+# Network tray.
+nm-applet &
+
+# VMware host/guest clipboard and drag/drop (no-op outside a VMware VM).
+[ -x /usr/bin/vmware-user ] && /usr/bin/vmware-user >/tmp/vmware-user.log 2>&1 &
+
+exit 0

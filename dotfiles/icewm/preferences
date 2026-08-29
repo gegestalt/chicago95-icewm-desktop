@@ -1,0 +1,106 @@
+# Windows-95-like behaviour
+Win95Keys=1
+MenuMouseTracking=1
+
+# Taskbar
+TaskBarAtTop=0
+TaskBarAutoHide=0
+TaskBarShowStartMenu=1
+TaskBarShowWindowListMenu=1
+TaskBarShowWorkspaces=0
+TaskBarShowClock=1
+TaskBarShowTray=1
+TaskBarEnableSystemTray=1
+TaskBarShowWindows=1
+TaskBarShowWindowIcons=1
+TaskBarShowWindowTitles=1
+TaskBarShowShowDesktopButton=1
+
+# Window behaviour
+RaiseOnFocus=0
+ClickToFocus=1
+FocusOnMap=1
+CenterLarge=0
+CenterTransientsOnOwner=1
+
+# Fonts
+TitleFontName="Adwaita Sans:size=10"
+MenuFontName="Adwaita Sans:size=10"
+StatusFontName="Adwaita Sans:size=10"
+QuickSwitchFontName="Adwaita Sans:size=10"
+NormalButtonFontName="Adwaita Sans:size=10"
+ActiveButtonFontName="Adwaita Sans:bold:size=10"
+NormalTaskBarFontName="Adwaita Sans:size=10"
+ActiveTaskBarFontName="Adwaita Sans:bold:size=10"
+ClockFontName="Adwaita Sans:size=10"
+
+# --- Larger UI ---
+
+
+
+DesktopBackgroundColor="#008080"
+DesktopBackgroundImage=""
+DesktopBackgroundCenter=0
+DesktopBackgroundScaled=0
+
+# ===== High-DPI IceWM =====
+
+
+
+
+
+
+
+
+
+
+
+# ===== HiDPI-friendly Chicago95 =====
+
+SmallIconSize=32
+LargeIconSize=48
+HugeIconSize=64
+MenuIconSize=24
+
+TitleBarHeight=34
+
+BorderSizeX=6
+BorderSizeY=6
+DlgBorderSizeX=6
+DlgBorderSizeY=6
+
+ScrollBarX=24
+ScrollBarY=24
+
+TrayIconMaxWidth=32
+TrayIconMaxHeight=32
+
+TitleFontNameXft="Adwaita Sans:size=15"
+MenuFontNameXft="Adwaita Sans:size=15"
+StatusFontNameXft="Adwaita Sans:size=15"
+QuickSwitchFontNameXft="Adwaita Sans:size=15"
+
+NormalButtonFontNameXft="Adwaita Sans:size=15"
+ActiveButtonFontNameXft="Adwaita Sans:size=15:bold"
+
+NormalTaskBarFontNameXft="Adwaita Sans:size=15"
+ActiveTaskBarFontNameXft="Adwaita Sans:size=15:bold"
+
+ClockFontNameXft="Adwaita Sans:size=15"
+ToolTipFontNameXft="Adwaita Sans:size=14"
+InputFontNameXft="Adwaita Sans:size=15"
+LabelFontNameXft="Adwaita Sans:size=15"
+
+# Default terminal
+
+
+# Hide IceWM's giant internal Settings/Preferences menu.
+ShowSettingsMenu=0
+ShowFocusModeMenu=0
+
+TaskBarDoubleHeight=0
+TaskBarShowClock=1
+TaskBarShowTray=1
+TaskBarShowWindowIcons=1
+TaskBarShowWindows=1
+TerminalCommand="alacritty"
