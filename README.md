@@ -13,7 +13,7 @@ falling back to stock GNOME apps.
 
 - **Start menu** with every installed app, auto-generated and grouped by
   category (`icewm-menu-fdo`), plus quick-launch shortcuts on top.
-- **A taskbar "Applications" button** (six-square grid icon) that opens `~/Applications`
+- **A taskbar "Applications" button** (3x3 grid icon, matching Ubuntu's app-grid glyph) that opens `~/Applications`
   — a flat, one-page, alphabetized grid of *every* installed app, no category
   folders. Kept in sync automatically on every login.
 - **HiDPI-correct window chrome.** The stock Chicago95 IceWM theme's title-bar
