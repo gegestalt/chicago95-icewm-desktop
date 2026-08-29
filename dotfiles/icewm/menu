@@ -17,6 +17,10 @@ prog "Media Player" mpv mpv
 
 separator
 
+prog "ClackType" __HOME__/.local/share/chicago95-icewm-desktop/games/clacktype/icon.png env GDK_SCALE=2 GDK_DPI_SCALE=1 firefox --new-window "file://__HOME__/.local/share/chicago95-icewm-desktop/games/clacktype/index.html"
+
+separator
+
 # Add your own project shortcuts here, e.g.:
 # prog "My Project" folder pcmanfm "__HOME__/path/to/project"
 
