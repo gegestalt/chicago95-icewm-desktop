@@ -187,7 +187,7 @@ fi
 # ---------------------------------------------------------------------------
 echo "-- Installing IceWM config --"
 mkdir -p "$HOME/.icewm/themes"
-for f in menu toolbar preferences startup theme; do
+for f in menu toolbar preferences startup theme winoptions; do
   track "$HOME/.icewm/$f"
   cp "$REPO_DIR/dotfiles/icewm/$f" "$HOME/.icewm/$f"
 done
@@ -436,6 +436,34 @@ if command -v plymouth >/dev/null 2>&1 && [ -d /usr/share/plymouth/themes ]; the
   echo "-- Rebuilding initramfs (this can take a little while) --"
   sudo update-initramfs -u
   PLYMOUTH_INSTALLED=1
+fi
+
+# ---------------------------------------------------------------------------
+# 11c. Firefox's own bundled taskbar/window icon (sudo required)
+#
+#    Firefox doesn't look up its window icon through the icon theme — it
+#    ships its own bundled PNGs and sets them directly via _NET_WM_ICON,
+#    and keeps re-asserting them for a while after each window maps
+#    (confirmed: dozens of property updates within the first second), which
+#    stomps a plain winoptions icon override almost immediately. The only
+#    way to actually change what shows up in the taskbar/quickswitch/alt-tab
+#    is to replace Firefox's own icon files. This is undone by the next
+#    Firefox package upgrade — re-run install.sh to reapply.
+# ---------------------------------------------------------------------------
+FIREFOX_ICON_DIR="/usr/lib/firefox/browser/chrome/icons/default"
+CHICAGO95_FIREFOX_SVG="$HOME/.icons/Chicago95-tux/apps/scalable/firefox_2.svg"
+if [ -d "$FIREFOX_ICON_DIR" ] && [ -f "$CHICAGO95_FIREFOX_SVG" ] && command -v convert >/dev/null 2>&1; then
+  echo "-- Replacing Firefox's bundled icon with the classic Chicago95 one (sudo required) --"
+  for size in 16 32 48 64 128; do
+    target="$FIREFOX_ICON_DIR/default${size}.png"
+    [ -f "$target" ] || continue
+    track "$target"
+    convert -background none -resize "${size}x${size}" "$CHICAGO95_FIREFOX_SVG" "$STATE_DIR/firefox-icon-$size.png"
+    sudo cp "$STATE_DIR/firefox-icon-$size.png" "$target"
+    rm -f "$STATE_DIR/firefox-icon-$size.png"
+  done
+  echo "   (a Firefox package upgrade may restore the stock icon later — re-run install.sh to reapply)"
+  echo "   (quit Firefox completely — not just close the window — for this to take effect)"
 fi
 
 # ---------------------------------------------------------------------------

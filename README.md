@@ -52,6 +52,12 @@ falling back to stock GNOME apps.
   instead of GNOME Control Center (GTK4/libadwaita, also unreskinnable).
 - **GSettings synced** to the theme so GTK4/portal-aware apps stop falling
   back to Yaru/Adwaita.
+- **The classic Firefox icon everywhere Firefox shows up** — desktop,
+  Start menu, taskbar, quickswitch, alt-tab. Firefox ignores the icon
+  theme for its own window icon (it ships bundled PNGs and re-asserts them
+  via `_NET_WM_ICON`), so `install.sh` replaces those bundled files
+  directly with the classic Chicago95 icon. Undone by Firefox package
+  upgrades; re-run `install.sh` to reapply.
 - **LightDM greeter** configured for Chicago95 with the correct DPI.
 - **A Plymouth boot theme** — a 20-frame Windows-95-style boot animation,
   installed to `/usr/share/plymouth/themes/Chicago95` and set as default.

@@ -1,0 +1,8 @@
+# Firefox re-asserts its own bundled icon (_NET_WM_ICON) continuously after
+# mapping (confirmed: dozens of property updates within the first second),
+# so this override alone gets stomped almost immediately. Left here as
+# defense-in-depth for the taskbar/quickswitch icon lookup path, in case a
+# future Firefox build stops doing that — the actual fix is install.sh
+# replacing Firefox's own bundled icon files (see the "Firefox's own
+# bundled icon" step there).
+firefox.icon: firefox_2
