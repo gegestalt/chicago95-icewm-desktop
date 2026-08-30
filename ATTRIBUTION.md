@@ -16,7 +16,14 @@ Chicago95's license, not this repo's.
   `~/.local/share/sounds/Chicago95` and sets it as the active sound theme,
   and copies a handful of these files into `~/.icewm/sounds/` for IceWM's
   own `icesound` daemon (startup/shutdown/restart/dialog events).
-  Upstream ships these as 8-bit/22050Hz PCM; that format made PipeWire's
-  resampler stutter badly on playback (`spa.audioconvert: ... out of
-  buffers`), so the `.wav` files here are transcoded to 16-bit/44100Hz —
-  same audio, no other changes.
+  Upstream ships these as 8-bit/22050Hz PCM. Two independent things made
+  that stutter on playback: the low bit depth, and — the bigger one —
+  22050Hz/44100Hz isn't a rate PipeWire's clock ever runs at (it's fixed to
+  48000Hz here), so *every* playback needed live resampling, and that
+  resampler underran repeatedly for the whole duration of the clip
+  (`spa.audioconvert: ... out of buffers`, dozens of times per play, not
+  just once at start). The `.wav` files here are transcoded straight to
+  16-bit/48000Hz — PipeWire's native rate — so no resampling happens at
+  all; same audio, no other changes. (A single harmless `out of buffers`
+  blip can still show up the very first time a fresh PipeWire graph plays
+  anything at all — that's normal stream-startup buffering, not this bug.)
