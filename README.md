@@ -31,6 +31,11 @@ falling back to stock GNOME apps.
 - **GSettings synced** to the theme so GTK4/portal-aware apps stop falling
   back to Yaru/Adwaita.
 - **LightDM greeter** configured for Chicago95 with the correct DPI.
+- **A Plymouth boot theme** — a 20-frame Windows-95-style boot animation,
+  installed to `/usr/share/plymouth/themes/Chicago95` and set as default.
+  Vendored from upstream Chicago95 (see [ATTRIBUTION.md](ATTRIBUTION.md)),
+  which ships it but doesn't wire it up itself. Takes effect on next
+  reboot — `install.sh` stages it, it doesn't reboot you.
 - **A game: ClackType.** `games/clacktype` — a from-scratch typing-speed
   test in the same vein as Monkeytype (word-by-word correct/incorrect
   highlighting, live WPM/accuracy, time and word-count modes, and a
@@ -104,6 +109,7 @@ dotfiles/config/                  gtk-3.0, gtk-4.0, mimeapps.list, dunst
 dotfiles/local/bin/build-app-grid script that (re)builds ~/Applications
 icons/chicago95-applications/     the taskbar "Applications" icon, all sizes
 games/clacktype/                  self-contained typing-test game (no deps)
+system/plymouth/Chicago95/        boot theme (vendored, see ATTRIBUTION.md)
 system/                           lightdm + xsessions entries (sudo-installed)
 .github/workflows/lint.yml        CI: bash -n + ShellCheck on every push/PR
 ```
