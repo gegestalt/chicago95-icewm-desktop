@@ -132,7 +132,9 @@ if [ -f "$HOME/.Xresources" ]; then
   mv "$HOME/.Xresources.tmp" "$HOME/.Xresources"
 fi
 echo "Xft.dpi: $DPI" >> "$HOME/.Xresources"
-command -v xrdb >/dev/null 2>&1 && [ -n "${DISPLAY:-}" ] && xrdb -merge "$HOME/.Xresources" 2>/dev/null || true
+if command -v xrdb >/dev/null 2>&1 && [ -n "${DISPLAY:-}" ]; then
+  xrdb -merge "$HOME/.Xresources" 2>/dev/null || true
+fi
 
 # ---------------------------------------------------------------------------
 # 4. IceWM dotfiles
