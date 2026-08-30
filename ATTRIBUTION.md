@@ -11,3 +11,6 @@ Chicago95's license, not this repo's.
   images). `install.sh` installs this to
   `/usr/share/plymouth/themes/Chicago95` and sets it as the default via
   `update-alternatives`.
+- `system/sounds/Chicago95/` — the full Chicago95 sound theme (`.wav`
+  files + `index.theme`). `install.sh` installs this to
+  `~/.local/share/sounds/Chicago95` and sets it as the active sound theme.
