@@ -2,6 +2,13 @@
 
 export GTK_THEME=Chicago95
 
+# Make both Windows/Super keys work as an extra Alt too, so Super+Tab does
+# window-switching (KeySysSwitchNext="Alt+Tab") on compact/60% keyboards
+# where Alt and Win sit right next to each other. Additive: appends to
+# whatever XKB options are already active (e.g. from /etc/default/keyboard)
+# rather than replacing them.
+command -v setxkbmap >/dev/null 2>&1 && setxkbmap -option "altwin:alt_win"
+
 # XSETTINGS provider for GTK apps (icon theme, font, DPI, cursor). IceWM
 # doesn't run one itself, and without it GTK falls back to raw toolkit
 # defaults (Adwaita icons, unthemed fonts) until something else happens to
