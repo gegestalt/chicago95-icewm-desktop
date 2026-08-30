@@ -40,6 +40,12 @@ falling back to stock GNOME apps.
 - **A taskbar "Applications" button** (3x3 grid icon, matching Ubuntu's app-grid glyph) that opens `~/Applications`
   — a flat, one-page, alphabetized grid of *every* installed app, no category
   folders. Kept in sync automatically on every login.
+- **Desktop icons that don't vanish when you drag them.** `pcmanfm --desktop`
+  has a bug where a dragged icon's new position is saved correctly but
+  never repainted until some unrelated screen event forces it to (see
+  [#19](https://github.com/gegestalt/chicago95-icewm-desktop/issues/19)). A
+  small watcher (`dotfiles/local/bin/desktop-icon-repaint-watch`) forces
+  that repaint within ~50ms of any drag instead.
 - **Super+Tab also switches windows.** Both Windows/Super keys are set up as
   an extra Alt (`altwin:alt_win`), so Alt+Tab's window switcher
   (`KeySysSwitchNext`) also fires on Super+Tab — handy on compact/60%

@@ -1,0 +1,32 @@
+#!/bin/sh
+# Works around a pcmanfm --desktop bug: dragging a desktop icon to a new
+# spot saves its new position correctly, but the icon isn't repainted
+# anywhere (not at the old spot, not at the new one) until some unrelated
+# screen event forces a redraw — see issue #19. Root cause: pcmanfm's
+# desktop is one single window (confirmed via `xwininfo -root -tree`), not
+# one window per icon, so this is a GTK-internal draw-invalidation bug
+# inside pcmanfm itself; neither a compositor nor `xrefresh` (both tested)
+# can paper over it from outside.
+#
+# This watches the desktop layout file pcmanfm writes to on every drag and,
+# the moment it changes, clicks a fixed empty spot to force the repaint
+# pcmanfm itself isn't triggering, then restores the pointer to where it
+# was. Polls every 50ms so the fix lands well under human perception.
+CONF="$HOME/.config/pcmanfm/icewm/desktop-items-0.conf"
+LAST=""
+while true; do
+  if [ -f "$CONF" ]; then
+    CUR="$(stat -c %Y "$CONF" 2>/dev/null)"
+    if [ -n "$CUR" ] && [ "$CUR" != "$LAST" ]; then
+      if [ -n "$LAST" ]; then
+        POS="$(xdotool getmouselocation --shell 2>/dev/null)"
+        OX="$(echo "$POS" | sed -n 's/^X=//p')"
+        OY="$(echo "$POS" | sed -n 's/^Y=//p')"
+        xdotool mousemove 1500 950 click 1
+        [ -n "$OX" ] && [ -n "$OY" ] && xdotool mousemove "$OX" "$OY"
+      fi
+      LAST="$CUR"
+    fi
+  fi
+  sleep 0.05
+done
