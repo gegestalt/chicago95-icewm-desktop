@@ -40,6 +40,10 @@ falling back to stock GNOME apps.
 - **A taskbar "Applications" button** (3x3 grid icon, matching Ubuntu's app-grid glyph) that opens `~/Applications`
   — a flat, one-page, alphabetized grid of *every* installed app, no category
   folders. Kept in sync automatically on every login.
+- **Super+Tab also switches windows.** Both Windows/Super keys are set up as
+  an extra Alt (`altwin:alt_win`), so Alt+Tab's window switcher
+  (`KeySysSwitchNext`) also fires on Super+Tab — handy on compact/60%
+  keyboards where Alt and the Windows key sit right next to each other.
 - **HiDPI-correct window chrome.** The stock Chicago95 IceWM theme's title-bar
   buttons and borders are raw pixel-art sized for ~96 DPI screens; on a
   HiDPI display they render tiny inside an enlarged bar. This repo ships a
