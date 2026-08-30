@@ -126,7 +126,8 @@ sudo apt-get install -y \
   gpicview evince mpv \
   dunst pcmanfm libfm-modules \
   network-manager-gnome \
-  imagemagick
+  imagemagick \
+  picom
 
 # ---------------------------------------------------------------------------
 # 3. Detect display DPI and pick the matching theme-asset scale

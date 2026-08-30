@@ -64,6 +64,10 @@ falling back to stock GNOME apps.
   startup, shutdown, restart, and dialog-open/close — not just files
   sitting in a theme folder that nothing ever plays. GSettings also points
   GTK4/portal apps at the same theme.
+- **A compositor (`picom`)** running in the background. IceWM has no
+  compositing of its own, and without one, dragging a desktop icon to a
+  new spot leaves it invisible until some unrelated screen event forces a
+  repaint (see [#19](https://github.com/gegestalt/chicago95-icewm-desktop/issues/19)) — picom fixes that.
 - **A game: ClackType.** `games/clacktype` — a from-scratch typing-speed
   test in the same vein as Monkeytype (word-by-word correct/incorrect
   highlighting, live WPM/accuracy, time and word-count modes, and a

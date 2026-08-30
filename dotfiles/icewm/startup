@@ -9,6 +9,13 @@ export GTK_THEME=Chicago95
 # their very first frame instead of a fresh login briefly looking wrong.
 xfsettingsd &
 
+# Compositor. IceWM has no compositing of its own, and without one
+# pcmanfm's desktop icons have a reproducible bug: dragging one to a new
+# spot moves its stored position correctly but doesn't repaint it anywhere
+# until some unrelated Expose event happens (e.g. clicking empty desktop) —
+# see issue #19. picom forces that repaint to actually happen.
+command -v picom >/dev/null 2>&1 && picom -b
+
 # Keep the flat "Applications" grid (~/Applications) in sync with installed apps.
 "$HOME/.local/bin/build-app-grid" &
 
