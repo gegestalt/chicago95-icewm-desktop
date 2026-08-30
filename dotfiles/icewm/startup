@@ -22,6 +22,11 @@ xfsettingsd &
 # Desktop icons / file manager.
 pcmanfm --desktop --profile=icewm &
 
+# Works around a pcmanfm bug (issue #19): a dragged desktop icon doesn't
+# get repainted until some unrelated screen event forces it to. See the
+# script itself for the full story.
+command -v xdotool >/dev/null 2>&1 && "$HOME/.local/bin/desktop-icon-repaint-watch" &
+
 # Notifications.
 dunst &
 

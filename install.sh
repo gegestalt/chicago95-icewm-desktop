@@ -126,7 +126,8 @@ sudo apt-get install -y \
   gpicview evince mpv \
   dunst pcmanfm libfm-modules \
   network-manager-gnome \
-  imagemagick
+  imagemagick \
+  xdotool
 
 # ---------------------------------------------------------------------------
 # 3. Detect display DPI and pick the matching theme-asset scale
@@ -245,6 +246,17 @@ track "$HOME/.local/bin/build-app-grid"
 cp "$REPO_DIR/dotfiles/local/bin/build-app-grid" "$HOME/.local/bin/build-app-grid"
 chmod +x "$HOME/.local/bin/build-app-grid"
 "$HOME/.local/bin/build-app-grid"
+
+# ---------------------------------------------------------------------------
+# 7b. Desktop-icon repaint watcher (works around issue #19: pcmanfm doesn't
+#    repaint a desktop icon after you drag it to a new spot until some
+#    unrelated screen event forces it to). Runs for the life of the
+#    session; started from .icewm/startup.
+# ---------------------------------------------------------------------------
+echo "-- Installing the desktop-icon repaint watcher --"
+track "$HOME/.local/bin/desktop-icon-repaint-watch"
+cp "$REPO_DIR/dotfiles/local/bin/desktop-icon-repaint-watch" "$HOME/.local/bin/desktop-icon-repaint-watch"
+chmod +x "$HOME/.local/bin/desktop-icon-repaint-watch"
 
 # ---------------------------------------------------------------------------
 # 8. Desktop launcher icon
