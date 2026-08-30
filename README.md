@@ -14,6 +14,25 @@ falling back to stock GNOME apps.
 
 ![Demo](screenshots/demo.gif)
 
+## Technology stack
+
+- **Window manager:** [IceWM](https://ice-wm.org/)
+- **Theme:** [Chicago95](https://github.com/grassmunk/Chicago95) (GTK + icon theme)
+- **Terminal:** [Ghostty](https://ghostty.org/) — wired in as `TerminalCommand`
+  and the Start menu/taskbar launcher
+- **File manager:** `pcmanfm`
+- **Settings manager:** `xfce4-settings-manager` (GTK3, themable — unlike GNOME
+  Control Center)
+- **Notifications:** `dunst`
+- **Network applet:** `network-manager-gnome` (`nm-applet`)
+- **Image/document/media viewers:** `gpicview`, `evince`, `mpv`
+- **Display manager:** LightDM, themed to match
+- **Boot splash:** Plymouth, running the vendored Chicago95 boot animation
+- **Browser:** Firefox (`.deb`, not snap — see [What it doesn't
+  do](#what-it-doesnt-do))
+- **Install/uninstall tooling:** POSIX `sh`, no build step, no external
+  dependencies beyond `apt`
+
 ## What it does
 
 - **Start menu** with every installed app, auto-generated and grouped by
@@ -67,6 +86,9 @@ handled by the separate, opt-in `optional/migrate-firefox-to-deb.sh`, not by
 ## Prerequisites
 
 - Ubuntu (apt-based)
+- [Ghostty](https://ghostty.org/) installed (`apt install ghostty` on recent
+  Ubuntu; see ghostty.org for other distros/versions) — it's the default
+  terminal this repo wires up, and `install.sh` doesn't install it for you
 - The upstream Chicago95 theme already installed:
   ```
   git clone https://github.com/grassmunk/Chicago95.git ~/Chicago95
