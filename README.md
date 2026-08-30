@@ -58,10 +58,12 @@ falling back to stock GNOME apps.
   Vendored from upstream Chicago95 (see [ATTRIBUTION.md](ATTRIBUTION.md)),
   which ships it but doesn't wire it up itself. Takes effect on next
   reboot — `install.sh` stages it, it doesn't reboot you.
-- **A full sound theme** — clicks, dialogs, login/logout, trash, network
-  errors, and more, not just the login chime. Also vendored from upstream
-  Chicago95 (see [ATTRIBUTION.md](ATTRIBUTION.md)) since its own installer
-  doesn't set this part up either.
+- **The Windows-95 login/logout chime, actually audible.** Vendored from
+  upstream Chicago95 (see [ATTRIBUTION.md](ATTRIBUTION.md)) as a full XDG
+  sound theme, and wired into IceWM's own sound daemon (`icesound`) for
+  startup, shutdown, restart, and dialog-open/close — not just files
+  sitting in a theme folder that nothing ever plays. GSettings also points
+  GTK4/portal apps at the same theme.
 - **A game: ClackType.** `games/clacktype` — a from-scratch typing-speed
   test in the same vein as Monkeytype (word-by-word correct/incorrect
   highlighting, live WPM/accuracy, time and word-count modes, and a
