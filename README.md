@@ -107,6 +107,14 @@ cd chicago95-icewm-desktop
 
 Log out and pick the **IceWM Chicago95** session at the login screen.
 
+Display DPI (and the 1x-vs-2x theme-asset choice it drives) is detected
+once and then reused on every later run — some environments (observed on
+a VMware guest) silently drift the X server's reported DPI between
+logins, and re-detecting on every run would make a plain re-run of
+`install.sh` randomly shrink your fonts/taskbar back down. If you
+actually change monitors and want a fresh probe, run
+`CHICAGO95_REDETECT_DPI=1 ./install.sh`.
+
 Optional, recommended if Firefox is installed as a snap:
 ```
 ./optional/migrate-firefox-to-deb.sh

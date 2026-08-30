@@ -130,18 +130,38 @@ sudo apt-get install -y \
 
 # ---------------------------------------------------------------------------
 # 3. Detect display DPI and pick the matching theme-asset scale
+#
+#    Re-detected on every run, this isn't actually idempotent: on at least
+#    one VM (VMware guest tools auto-fitting the display to the host
+#    window), the X server's own reported DPI has been observed to drift
+#    from 144 down to 96 on its own, between logins, with no user action.
+#    A plain re-run of install.sh then "detects" 96, silently downgrades a
+#    HiDPI setup to 1x theme assets, and the fonts/taskbar shrink for no
+#    reason the user did anything to cause. So: detect once, then reuse
+#    that value on every later run. Pass CHICAGO95_REDETECT_DPI=1 to force
+#    a fresh probe (e.g. after actually changing monitors).
 # ---------------------------------------------------------------------------
-DPI=96
-if command -v xdpyinfo >/dev/null 2>&1 && [ -n "${DISPLAY:-}" ]; then
-  DETECTED=$(xdpyinfo 2>/dev/null | sed -n 's/^ *resolution: *\([0-9]*\)x.*/\1/p' | head -1)
-  [ -n "${DETECTED:-}" ] && DPI="$DETECTED"
+DPI_STATE_FILE="$STATE_DIR/dpi"
+if [ -f "$DPI_STATE_FILE" ] && [ -z "${CHICAGO95_REDETECT_DPI:-}" ]; then
+  DPI="$(cat "$DPI_STATE_FILE")"
+  echo "-- Using previously-detected ${DPI} DPI from $DPI_STATE_FILE --"
+  echo "   (set CHICAGO95_REDETECT_DPI=1 to re-detect, e.g. after a real monitor change)"
+else
+  DPI=96
+  if command -v xdpyinfo >/dev/null 2>&1 && [ -n "${DISPLAY:-}" ]; then
+    DETECTED=$(xdpyinfo 2>/dev/null | sed -n 's/^ *resolution: *\([0-9]*\)x.*/\1/p' | head -1)
+    [ -n "${DETECTED:-}" ] && DPI="$DETECTED"
+  fi
+  mkdir -p "$STATE_DIR"
+  echo "$DPI" > "$DPI_STATE_FILE"
+  echo "-- Detected ${DPI} DPI, saved to $DPI_STATE_FILE for future runs --"
 fi
 if [ "$DPI" -ge 120 ]; then
   SCALE=2x
 else
   SCALE=1x
 fi
-echo "-- Detected ${DPI} DPI -> using $SCALE theme assets --"
+echo "-- Using $SCALE theme assets --"
 
 # ---------------------------------------------------------------------------
 # 3b. Xft.dpi via ~/.Xresources — this is what actually makes GTK/Xft apps
