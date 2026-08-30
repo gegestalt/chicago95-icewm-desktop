@@ -1,5 +1,5 @@
 prog "Applications" __HOME__/.icewm/dots6.png pcmanfm "__HOME__/Applications"
-prog "Alacritty" utilities-terminal alacritty
+prog "Ghostty" utilities-terminal ghostty
 prog "Files" system-file-manager pcmanfm
 prog "My Documents" folder-documents pcmanfm "__HOME__"
 

@@ -103,4 +103,4 @@ TaskBarShowClock=1
 TaskBarShowTray=1
 TaskBarShowWindowIcons=1
 TaskBarShowWindows=1
-TerminalCommand="alacritty"
+TerminalCommand="ghostty"
