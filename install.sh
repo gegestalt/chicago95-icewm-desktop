@@ -276,6 +276,26 @@ EOF
 fi
 
 # ---------------------------------------------------------------------------
+# 11b. Plymouth boot theme (only if Plymouth is installed). This needs a
+#    reboot to actually see — installing it now only stages it for the
+#    next boot, it does not reboot you.
+# ---------------------------------------------------------------------------
+if command -v plymouth >/dev/null 2>&1 && [ -d /usr/share/plymouth/themes ]; then
+  echo "-- Installing the Plymouth boot theme (sudo required) --"
+  track /usr/share/plymouth/themes/Chicago95
+  sudo rm -rf /usr/share/plymouth/themes/Chicago95
+  sudo cp -a "$REPO_DIR/system/plymouth/Chicago95" /usr/share/plymouth/themes/Chicago95
+  track /etc/alternatives/default.plymouth
+  sudo update-alternatives --install /usr/share/plymouth/themes/default.plymouth default.plymouth \
+    /usr/share/plymouth/themes/Chicago95/Chicago95.plymouth 100 >/dev/null
+  sudo update-alternatives --set default.plymouth \
+    /usr/share/plymouth/themes/Chicago95/Chicago95.plymouth >/dev/null
+  echo "-- Rebuilding initramfs (this can take a little while) --"
+  sudo update-initramfs -u
+  PLYMOUTH_INSTALLED=1
+fi
+
+# ---------------------------------------------------------------------------
 # 12. Hot-reload if IceWM is already running in this session
 # ---------------------------------------------------------------------------
 if pgrep -x icewm >/dev/null 2>&1; then
@@ -287,6 +307,9 @@ fi
 
 echo
 echo "Done. Log out and pick the 'IceWM Chicago95' session for a clean start."
+if [ "${PLYMOUTH_INSTALLED:-0}" = "1" ]; then
+  echo "The Plymouth boot theme is staged — reboot to see it."
+fi
 echo
 echo "Everything this script overwrote is backed up at:"
 echo "  $BACKUP_ROOT"

@@ -1,6 +1,9 @@
 # Chicago95 IceWM Desktop
 
 [![Lint](https://github.com/gegestalt/chicago95-icewm-desktop/actions/workflows/lint.yml/badge.svg)](https://github.com/gegestalt/chicago95-icewm-desktop/actions/workflows/lint.yml)
+[![Release](https://img.shields.io/github/v/release/gegestalt/chicago95-icewm-desktop)](https://github.com/gegestalt/chicago95-icewm-desktop/releases)
+
+See [CHANGELOG.md](CHANGELOG.md) for release notes.
 
 A Windows-95/XP-styled IceWM desktop for Ubuntu, built on top of the
 [Chicago95](https://github.com/grassmunk/Chicago95) GTK/icon theme. This repo
@@ -31,10 +34,11 @@ falling back to stock GNOME apps.
 - **GSettings synced** to the theme so GTK4/portal-aware apps stop falling
   back to Yaru/Adwaita.
 - **LightDM greeter** configured for Chicago95 with the correct DPI.
-- **A full sound theme** — clicks, dialogs, login/logout, trash, network
-  errors, and more, not just the login chime. Vendored from upstream
-  Chicago95 (see [ATTRIBUTION.md](ATTRIBUTION.md)) since its own installer
-  doesn't set this part up.
+- **A Plymouth boot theme** — a 20-frame Windows-95-style boot animation,
+  installed to `/usr/share/plymouth/themes/Chicago95` and set as default.
+  Vendored from upstream Chicago95 (see [ATTRIBUTION.md](ATTRIBUTION.md)),
+  which ships it but doesn't wire it up itself. Takes effect on next
+  reboot — `install.sh` stages it, it doesn't reboot you.
 - **A game: ClackType.** `games/clacktype` — a from-scratch typing-speed
   test in the same vein as Monkeytype (word-by-word correct/incorrect
   highlighting, live WPM/accuracy, time and word-count modes, and a
@@ -108,7 +112,7 @@ dotfiles/config/                  gtk-3.0, gtk-4.0, mimeapps.list, dunst
 dotfiles/local/bin/build-app-grid script that (re)builds ~/Applications
 icons/chicago95-applications/     the taskbar "Applications" icon, all sizes
 games/clacktype/                  self-contained typing-test game (no deps)
-system/sounds/Chicago95/          full sound theme (vendored, see ATTRIBUTION.md)
+system/plymouth/Chicago95/        boot theme (vendored, see ATTRIBUTION.md)
 system/                           lightdm + xsessions entries (sudo-installed)
 .github/workflows/lint.yml        CI: bash -n + ShellCheck on every push/PR
 ```
