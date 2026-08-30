@@ -13,4 +13,10 @@ Chicago95's license, not this repo's.
   `update-alternatives`.
 - `system/sounds/Chicago95/` — the full Chicago95 sound theme (`.wav`
   files + `index.theme`). `install.sh` installs this to
-  `~/.local/share/sounds/Chicago95` and sets it as the active sound theme.
+  `~/.local/share/sounds/Chicago95` and sets it as the active sound theme,
+  and copies a handful of these files into `~/.icewm/sounds/` for IceWM's
+  own `icesound` daemon (startup/shutdown/restart/dialog events).
+  Upstream ships these as 8-bit/22050Hz PCM; that format made PipeWire's
+  resampler stutter badly on playback (`spa.audioconvert: ... out of
+  buffers`), so the `.wav` files here are transcoded to 16-bit/44100Hz —
+  same audio, no other changes.

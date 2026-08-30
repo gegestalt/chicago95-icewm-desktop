@@ -283,6 +283,32 @@ track "$SOUNDS_DIR"
 cp -a "$REPO_DIR/system/sounds/Chicago95/." "$SOUNDS_DIR/"
 
 # ---------------------------------------------------------------------------
+# 9c. Wire the sound theme up to something that actually plays it. IceWM
+#    has no session component that reads the XDG sound theme (that's a
+#    GNOME/gnome-settings-daemon thing) — the GSettings key set below just
+#    tells GTK4/portal apps which theme *would* apply, it doesn't make
+#    anything audible on its own. IceWM's own sound daemon is `icesound`:
+#    it watches IceWM's GUI-event root-window property and plays
+#    event-named .wav files from ~/.icewm/sounds/. It only starts if
+#    icewm-session is launched with --sound (see the xsessions entry).
+# ---------------------------------------------------------------------------
+if command -v icesound >/dev/null 2>&1; then
+  echo "-- Wiring IceWM GUI events to Chicago95 sounds (icesound) --"
+  ICEWM_SOUNDS_DIR="$HOME/.icewm/sounds"
+  mkdir -p "$ICEWM_SOUNDS_DIR"
+  track "$ICEWM_SOUNDS_DIR"
+  map_sound() {
+    track "$ICEWM_SOUNDS_DIR/$1"
+    cp -a "$SOUNDS_DIR/stereo/$2" "$ICEWM_SOUNDS_DIR/$1"
+  }
+  map_sound startup.wav     desktop-login.wav
+  map_sound shutdown.wav    desktop-logout.wav
+  map_sound restart.wav     desktop-logout.wav
+  map_sound dialogOpen.wav  dialog-information.wav
+  map_sound dialogClose.wav window-inactive-click.wav
+fi
+
+# ---------------------------------------------------------------------------
 # 10. GSettings (affects GTK4/portal-aware apps and anything reading the
 #    freedesktop interface schema, independent of IceWM's own config files)
 # ---------------------------------------------------------------------------
