@@ -1,6 +1,9 @@
 # Chicago95 IceWM Desktop
 
 [![Lint](https://github.com/gegestalt/chicago95-icewm-desktop/actions/workflows/lint.yml/badge.svg)](https://github.com/gegestalt/chicago95-icewm-desktop/actions/workflows/lint.yml)
+[![Release](https://img.shields.io/github/v/release/gegestalt/chicago95-icewm-desktop)](https://github.com/gegestalt/chicago95-icewm-desktop/releases)
+
+See [CHANGELOG.md](CHANGELOG.md) for release notes.
 
 A Windows-95/XP-styled IceWM desktop for Ubuntu, built on top of the
 [Chicago95](https://github.com/grassmunk/Chicago95) GTK/icon theme. This repo
