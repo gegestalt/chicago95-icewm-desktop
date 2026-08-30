@@ -43,9 +43,13 @@ TS="$(date -u +%Y%m%dT%H%M%SZ 2>/dev/null || echo run)"
 BACKUP_ROOT="$STATE_DIR/backups/$TS"
 MANIFEST="$BACKUP_ROOT/manifest.txt"
 GSETTINGS_RESTORE="$BACKUP_ROOT/gsettings-restore.sh"
+XFCONF_RESTORE="$BACKUP_ROOT/xfconf-restore.sh"
+DCONF_RESTORE="$BACKUP_ROOT/dconf-restore.sh"
 mkdir -p "$BACKUP_ROOT/existed"
 : > "$MANIFEST"
 echo "#!/bin/sh" > "$GSETTINGS_RESTORE"
+echo "#!/bin/sh" > "$XFCONF_RESTORE"
+echo "#!/bin/sh" > "$DCONF_RESTORE"
 
 track() {
   local path="$1"
@@ -65,6 +69,28 @@ track_gsetting() {
   old="$(gsettings get "$schema" "$key" 2>/dev/null || true)"
   if [ -n "$old" ]; then
     echo "gsettings set $schema $key $old" >> "$GSETTINGS_RESTORE"
+  fi
+}
+
+track_xfconf() {
+  local channel="$1" prop="$2"
+  local old
+  old="$(xfconf-query -c "$channel" -p "$prop" 2>/dev/null || true)"
+  if [ -n "$old" ]; then
+    printf 'xfconf-query -c %s -p %s -s %q\n' "$channel" "$prop" "$old" >> "$XFCONF_RESTORE"
+  else
+    printf 'xfconf-query -c %s -p %s -r 2>/dev/null || true\n' "$channel" "$prop" >> "$XFCONF_RESTORE"
+  fi
+}
+
+track_dconf() {
+  local key="$1"
+  local old
+  old="$(dconf read "$key" 2>/dev/null || true)"
+  if [ -n "$old" ]; then
+    printf 'dconf write %s %q\n' "$key" "$old" >> "$DCONF_RESTORE"
+  else
+    printf 'dconf reset %s\n' "$key" >> "$DCONF_RESTORE"
   fi
 }
 
@@ -272,6 +298,58 @@ if command -v gsettings >/dev/null 2>&1; then
   gsettings set org.gnome.desktop.interface document-font-name 'Adwaita Sans 15' 2>/dev/null || true
   track_gsetting org.gnome.desktop.sound theme-name
   gsettings set org.gnome.desktop.sound theme-name 'Chicago95' 2>/dev/null || true
+fi
+
+# ---------------------------------------------------------------------------
+# 10b. xfconf "xsettings" channel. IceWM has no XSETTINGS provider of its
+#    own, so .icewm/startup now runs xfsettingsd for that (see the startup
+#    dotfile). xfsettingsd broadcasts whatever is in this channel to every
+#    GTK app — and it broadcasts that on top of the GSettings values above,
+#    not instead of them. Left unconfigured, it broadcasts stale/upstream
+#    defaults (we saw Greybird/elementary-xfce-dark/Sans 10/96dpi on a test
+#    machine) and silently overwrites the Chicago95 GSettings on the very
+#    next login. This is the root cause of "the icons/taskbar/fonts are
+#    huge again after I log back in": nothing was wrong with the install,
+#    xfsettingsd just had never been given Chicago95 values to broadcast.
+# ---------------------------------------------------------------------------
+if command -v xfconf-query >/dev/null 2>&1; then
+  echo "-- Syncing the xfsettingsd XSETTINGS channel to Chicago95 --"
+  set_xfconf() {
+    local prop="$1" type="$2" value="$3"
+    track_xfconf xsettings "$prop"
+    xfconf-query -c xsettings -p "$prop" -s "$value" 2>/dev/null \
+      || xfconf-query -c xsettings -p "$prop" -n -t "$type" -s "$value" 2>/dev/null || true
+  }
+  set_xfconf /Net/ThemeName     string Chicago95
+  set_xfconf /Net/IconThemeName string Chicago95-tux
+  set_xfconf /Gtk/FontName      string "Adwaita Sans 15"
+  set_xfconf /Xft/DPI           int    "$DPI"
+fi
+
+# ---------------------------------------------------------------------------
+# 10c. Pin ibus to the system's actual keyboard layout. This has nothing to
+#    do with Chicago95 itself, but it's the other half of the "settings
+#    don't survive a fresh login" complaint: a per-user dconf value at
+#    /desktop/ibus/general/preload-engines (left over from an earlier
+#    locale/keyboard choice — not shipped by ibus, whose own upstream
+#    default is empty) silently overrides /etc/default/keyboard's XKBLAYOUT
+#    every time ibus restarts at login, e.g. always coming back up in
+#    Turkish on a machine configured for "us". Pinning it here to whatever
+#    XKBLAYOUT is actually configured makes it deterministic.
+# ---------------------------------------------------------------------------
+if command -v dconf >/dev/null 2>&1 && [ -f /etc/default/keyboard ]; then
+  echo "-- Pinning ibus to the system keyboard layout --"
+  SYS_LAYOUT="$(sed -n 's/^XKBLAYOUT="\(.*\)"/\1/p' /etc/default/keyboard | head -1)"
+  [ -z "$SYS_LAYOUT" ] && SYS_LAYOUT=us
+  case "$SYS_LAYOUT" in
+    us) IBUS_ENGINE=xkb:us::eng ;;
+    tr) IBUS_ENGINE=xkb:tr::tur ;;
+    *)  IBUS_ENGINE="xkb:${SYS_LAYOUT}::" ;;
+  esac
+  track_dconf /desktop/ibus/general/preload-engines
+  track_dconf /desktop/ibus/general/engines-order
+  dconf write /desktop/ibus/general/preload-engines "['$IBUS_ENGINE']"
+  dconf write /desktop/ibus/general/engines-order "['$IBUS_ENGINE']"
 fi
 
 # ---------------------------------------------------------------------------

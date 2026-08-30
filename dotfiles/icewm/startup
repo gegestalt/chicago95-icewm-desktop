@@ -2,6 +2,13 @@
 
 export GTK_THEME=Chicago95
 
+# XSETTINGS provider for GTK apps (icon theme, font, DPI, cursor). IceWM
+# doesn't run one itself, and without it GTK falls back to raw toolkit
+# defaults (Adwaita icons, unthemed fonts) until something else happens to
+# start one. Started first so pcmanfm/nm-applet/dunst below pick it up from
+# their very first frame instead of a fresh login briefly looking wrong.
+xfsettingsd &
+
 # Keep the flat "Applications" grid (~/Applications) in sync with installed apps.
 "$HOME/.local/bin/build-app-grid" &
 

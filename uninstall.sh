@@ -26,6 +26,8 @@ fi
 BACKUP_ROOT="$STATE_DIR/backups/$TS"
 MANIFEST="$BACKUP_ROOT/manifest.txt"
 GSETTINGS_RESTORE="$BACKUP_ROOT/gsettings-restore.sh"
+XFCONF_RESTORE="$BACKUP_ROOT/xfconf-restore.sh"
+DCONF_RESTORE="$BACKUP_ROOT/dconf-restore.sh"
 
 if [ ! -f "$MANIFEST" ]; then
   echo "No manifest found for run '$TS' at $MANIFEST" >&2
@@ -76,6 +78,16 @@ done < "$MANIFEST"
 if [ -s "$GSETTINGS_RESTORE" ] && command -v gsettings >/dev/null 2>&1; then
   echo "-- Restoring previous GSettings values --"
   sh "$GSETTINGS_RESTORE"
+fi
+
+if [ -s "$XFCONF_RESTORE" ] && command -v xfconf-query >/dev/null 2>&1; then
+  echo "-- Restoring previous xfconf (xsettings) values --"
+  sh "$XFCONF_RESTORE"
+fi
+
+if [ -s "$DCONF_RESTORE" ] && command -v dconf >/dev/null 2>&1; then
+  echo "-- Restoring previous dconf (ibus) values --"
+  sh "$DCONF_RESTORE"
 fi
 
 if pgrep -x icewm >/dev/null 2>&1; then
