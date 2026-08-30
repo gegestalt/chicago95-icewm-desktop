@@ -31,6 +31,10 @@ falling back to stock GNOME apps.
 - **GSettings synced** to the theme so GTK4/portal-aware apps stop falling
   back to Yaru/Adwaita.
 - **LightDM greeter** configured for Chicago95 with the correct DPI.
+- **A full sound theme** — clicks, dialogs, login/logout, trash, network
+  errors, and more, not just the login chime. Vendored from upstream
+  Chicago95 (see [ATTRIBUTION.md](ATTRIBUTION.md)) since its own installer
+  doesn't set this part up.
 - **A game: ClackType.** `games/clacktype` — a from-scratch typing-speed
   test in the same vein as Monkeytype (word-by-word correct/incorrect
   highlighting, live WPM/accuracy, time and word-count modes, and a
@@ -104,6 +108,7 @@ dotfiles/config/                  gtk-3.0, gtk-4.0, mimeapps.list, dunst
 dotfiles/local/bin/build-app-grid script that (re)builds ~/Applications
 icons/chicago95-applications/     the taskbar "Applications" icon, all sizes
 games/clacktype/                  self-contained typing-test game (no deps)
+system/sounds/Chicago95/          full sound theme (vendored, see ATTRIBUTION.md)
 system/                           lightdm + xsessions entries (sudo-installed)
 .github/workflows/lint.yml        CI: bash -n + ShellCheck on every push/PR
 ```
