@@ -227,6 +227,17 @@ chmod +x "$HOME/Desktop/ClackType.desktop"
 gio set "$HOME/Desktop/ClackType.desktop" metadata::trusted true >/dev/null 2>&1 || true
 
 # ---------------------------------------------------------------------------
+# 9b. Sound theme — a full XDG sound theme (not just the login chime),
+#    vendored from upstream Chicago95 since its own installer doesn't wire
+#    this up. User-level install, no sudo needed.
+# ---------------------------------------------------------------------------
+echo "-- Installing the Chicago95 sound theme --"
+SOUNDS_DIR="$HOME/.local/share/sounds/Chicago95"
+mkdir -p "$SOUNDS_DIR"
+track "$SOUNDS_DIR"
+cp -a "$REPO_DIR/system/sounds/Chicago95/." "$SOUNDS_DIR/"
+
+# ---------------------------------------------------------------------------
 # 10. GSettings (affects GTK4/portal-aware apps and anything reading the
 #    freedesktop interface schema, independent of IceWM's own config files)
 # ---------------------------------------------------------------------------
@@ -240,6 +251,8 @@ if command -v gsettings >/dev/null 2>&1; then
   gsettings set org.gnome.desktop.interface color-scheme 'default' 2>/dev/null || true
   gsettings set org.gnome.desktop.interface font-name 'Adwaita Sans 15' 2>/dev/null || true
   gsettings set org.gnome.desktop.interface document-font-name 'Adwaita Sans 15' 2>/dev/null || true
+  track_gsetting org.gnome.desktop.sound theme-name
+  gsettings set org.gnome.desktop.sound theme-name 'Chicago95' 2>/dev/null || true
 fi
 
 # ---------------------------------------------------------------------------
