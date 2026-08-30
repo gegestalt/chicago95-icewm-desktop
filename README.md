@@ -68,11 +68,15 @@ falling back to stock GNOME apps.
   Vendored from upstream Chicago95 (see [ATTRIBUTION.md](ATTRIBUTION.md)),
   which ships it but doesn't wire it up itself. Takes effect on next
   reboot — `install.sh` stages it, it doesn't reboot you.
-- **The Windows-95 login/logout chime, actually audible.** Vendored from
-  upstream Chicago95 (see [ATTRIBUTION.md](ATTRIBUTION.md)) as a full XDG
-  sound theme, and wired into IceWM's own sound daemon (`icesound`) for
-  startup, shutdown, restart, and dialog-open/close — not just files
-  sitting in a theme folder that nothing ever plays. GSettings also points
+- **The Windows-95 login/logout chime, actually audible — and not
+  stuttering.** Vendored from upstream Chicago95 (see
+  [ATTRIBUTION.md](ATTRIBUTION.md)) as a full XDG sound theme, and wired
+  into IceWM's own sound daemon (`icesound`) for startup, shutdown,
+  restart, and dialog-open/close — not just files sitting in a theme
+  folder that nothing ever plays. The upstream `.wav` files are also
+  transcoded to PipeWire's native 48000Hz (see ATTRIBUTION.md) — at the
+  original 22050Hz, every playback needed live resampling and that
+  resampler underran for the whole clip. GSettings also points
   GTK4/portal apps at the same theme.
 - **A game: ClackType.** `games/clacktype` — a from-scratch typing-speed
   test in the same vein as Monkeytype (word-by-word correct/incorrect
