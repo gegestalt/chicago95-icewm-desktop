@@ -126,6 +126,7 @@ sudo apt-get install -y \
   gpicview evince mpv \
   dunst pcmanfm libfm-modules \
   network-manager-gnome \
+  xxkb \
   imagemagick
 
 # ---------------------------------------------------------------------------
@@ -181,6 +182,15 @@ echo "Xft.dpi: $DPI" >> "$HOME/.Xresources"
 if command -v xrdb >/dev/null 2>&1 && [ -n "${DISPLAY:-}" ]; then
   xrdb -merge "$HOME/.Xresources" 2>/dev/null || true
 fi
+
+# ---------------------------------------------------------------------------
+# 3c. ~/.xxkbrc — the "En"/"Tr" layout switcher that lives in the taskbar
+#    tray. The two XKB groups it switches between ("us,tr") are set on
+#    every login by .icewm/startup, not here; this file only controls how
+#    xxkb displays and toggles them.
+# ---------------------------------------------------------------------------
+track "$HOME/.xxkbrc"
+cp "$REPO_DIR/dotfiles/xxkbrc" "$HOME/.xxkbrc"
 
 # ---------------------------------------------------------------------------
 # 4. IceWM dotfiles

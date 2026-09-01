@@ -2,12 +2,21 @@
 
 export GTK_THEME=Chicago95
 
-# Make both Windows/Super keys work as an extra Alt too, so Super+Tab does
-# window-switching (KeySysSwitchNext="Alt+Tab") on compact/60% keyboards
-# where Alt and Win sit right next to each other. Additive: appends to
-# whatever XKB options are already active (e.g. from /etc/default/keyboard)
-# rather than replacing them.
-command -v setxkbmap >/dev/null 2>&1 && setxkbmap -option "altwin:alt_win"
+# Two keyboard groups (English, Turkish) for the "En"/"Tr" tray switcher
+# below to toggle between, plus: make both Windows/Super keys work as an
+# extra Alt too, so Super+Tab does window-switching
+# (KeySysSwitchNext="Alt+Tab") on compact/60% keyboards where Alt and Win
+# sit right next to each other. The altwin:alt_win option is additive —
+# appended to whatever XKB options are already active (e.g. from
+# /etc/default/keyboard) — but -layout replaces whatever single layout
+# was active, which is the point: it's what turns "us" into "us,tr" so
+# there's a second group to switch to at all.
+command -v setxkbmap >/dev/null 2>&1 && setxkbmap -layout "us,tr" -option "altwin:alt_win"
+
+# "En"/"Tr" keyboard-layout indicator and switcher, bottom-right of the
+# taskbar (IceWM's system tray) — click it to toggle the two groups just
+# loaded above. Config: ~/.xxkbrc.
+command -v xxkb >/dev/null 2>&1 && xxkb &
 
 # XSETTINGS provider for GTK apps (icon theme, font, DPI, cursor). IceWM
 # doesn't run one itself, and without it GTK falls back to raw toolkit
