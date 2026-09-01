@@ -1,0 +1,37 @@
+! ~/.xxkbrc — English/Turkish layout indicator and switcher, lives in the
+! IceWM system tray (bottom-right taskbar). Click it to toggle between the
+! two layouts setxkbmap loads in .icewm/startup ("us,tr" — group 1 is
+! English, group 2 is Turkish).
+!
+! Turkish here is the standard XKB "tr" (Q) layout, not an Apple-style
+! "Turkish Mac" layout — X11's xkeyboard-config ships no such variant
+! (checked directly against /usr/share/X11/xkb/rules/evdev.xml: the real
+! tr variants are f/e/alt/intl, none of them "mac"). This is the closest
+! available match for everyday typing. Swap XXkb.group.alt/base or run
+! `setxkbmap -layout tr -variant intl` by hand to try the dead-key
+! "international" variant instead, if the base Q layout doesn't fit.
+
+XXkb.mainwindow.enable: yes
+XXkb.mainwindow.appicon: no
+XXkb.mainwindow.type: tray
+XXkb.mainwindow.in_tray: true
+XXkb.mainwindow.border.width: 0
+XXkb.mainwindow.geometry: 20x16+0+0
+
+XXkb.mainwindow.label.enable: yes
+XXkb.mainwindow.label.text.1: En
+XXkb.mainwindow.label.text.2: Tr
+XXkb.mainwindow.label.font: -misc-*-r-*-13-*
+XXkb.mainwindow.label.background: #000000
+XXkb.mainwindow.label.foreground: white
+
+XXkb.group.base: 1
+XXkb.group.alt: 2
+XXkb.controls.two_state: yes
+XXkb.controls.focusout: no
+XXkb.controls.add_when_start: yes
+XXkb.controls.add_when_create: yes
+XXkb.controls.add_when_change: no
+
+XXkb.button.enable: no
+XXkb.bell.enable: no
