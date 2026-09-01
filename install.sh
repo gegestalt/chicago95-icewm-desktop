@@ -430,6 +430,14 @@ if command -v dconf >/dev/null 2>&1 && [ -f /etc/default/keyboard ]; then
   dconf write /desktop/ibus/general/preload-engines "['$IBUS_ENGINE']"
   dconf write /desktop/ibus/general/engines-order "['$IBUS_ENGINE']"
   dconf write /desktop/ibus/general/use-system-keyboard-layout true
+
+  # ibus's own panel also puts an "EN" indicator in the tray — a plain
+  # text label with no click-to-switch behavior (verified: left-clicking
+  # it doesn't change the active engine). Redundant now that xxkb (styled
+  # to match its look, see dotfiles/xxkbrc) is the actual clickable
+  # switcher; without this, both would show side by side in the tray.
+  track_dconf /desktop/ibus/panel/show-icon-on-systray
+  dconf write /desktop/ibus/panel/show-icon-on-systray false
 fi
 
 # ---------------------------------------------------------------------------
