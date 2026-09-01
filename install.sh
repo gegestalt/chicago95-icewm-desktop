@@ -404,6 +404,16 @@ fi
 #    every time ibus restarts at login, e.g. always coming back up in
 #    Turkish on a machine configured for "us". Pinning it here to whatever
 #    XKBLAYOUT is actually configured makes it deterministic.
+#
+#    use-system-keyboard-layout also has to be turned on here, or ibus
+#    fights the "us,tr" two-group layout .icewm/startup sets up for the
+#    xxkb tray switcher: with it off (ibus's own default), ibus reapplies
+#    its single pinned engine's layout to the X server via its own XKB
+#    engine every time it (re)starts — collapsing "us,tr" back down to a
+#    lone "us" group moments after login, before xxkb has anything to
+#    toggle to. With it on, ibus leaves whatever setxkbmap already
+#    configured alone. Verified by restarting ibus-daemon with each
+#    setting and checking `setxkbmap -query` after.
 # ---------------------------------------------------------------------------
 if command -v dconf >/dev/null 2>&1 && [ -f /etc/default/keyboard ]; then
   echo "-- Pinning ibus to the system keyboard layout --"
@@ -416,8 +426,10 @@ if command -v dconf >/dev/null 2>&1 && [ -f /etc/default/keyboard ]; then
   esac
   track_dconf /desktop/ibus/general/preload-engines
   track_dconf /desktop/ibus/general/engines-order
+  track_dconf /desktop/ibus/general/use-system-keyboard-layout
   dconf write /desktop/ibus/general/preload-engines "['$IBUS_ENGINE']"
   dconf write /desktop/ibus/general/engines-order "['$IBUS_ENGINE']"
+  dconf write /desktop/ibus/general/use-system-keyboard-layout true
 fi
 
 # ---------------------------------------------------------------------------
