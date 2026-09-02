@@ -1,0 +1,90 @@
+#!/bin/bash
+# ~/.local/bin/chicago95-settings — the taskbar/app-grid "Settings" entry.
+#
+# A single yad picker fronting the individual GNOME Control Center panels,
+# rather than launching gnome-control-center's own multi-panel shell (its
+# GTK4/libadwaita chrome can't be reskinned to match Chicago95 — see the
+# README's "What it doesn't do"). XDG_CURRENT_DESKTOP=ubuntu:GNOME is set
+# on each launch because several panels gate their own UI on running under
+# a recognized desktop session, which IceWM isn't.
+#
+# Display is the one exception: gnome-control-center's display panel talks
+# to org.gnome.Mutter.DisplayConfig over D-Bus, a service Mutter (GNOME
+# Shell's compositor) provides and IceWM has no equivalent for — under
+# IceWM the panel opens but every control in it is silently non-functional
+# (confirmed via its own stderr: "Error calling GetCurrentState:
+# GDBus.Error:org.freedesktop.DBus.Error.NameHasNoOwner: Name
+# 'org.gnome.Mutter.DisplayConfig' does not exist"). arandr talks to X11
+# RandR directly instead, so it actually works here.
+#
+# No literal "&" in any row label below: yad's --list renders each cell as
+# Pango markup, and a bare "&" is invalid markup — it doesn't error, it
+# just silently breaks that row (observed: the label rendered as a repeat
+# of the row above's label instead of its own text). Spelled out "and"
+# instead, matching the rest of the copy in this list anyway.
+export GTK_THEME=Chicago95
+export GTK_ICON_THEME=Chicago95-tux
+
+CHOICE="$(
+	yad \
+		--title="Control Panel" \
+		--window-icon=preferences-system \
+		--width=700 \
+		--height=520 \
+		--center \
+		--list \
+		--no-headers \
+		--column="Setting" \
+		--column="Description" \
+		"Display" "Resolution, scaling and monitors" \
+		"Network" "Wi-Fi, Ethernet and connections" \
+		"Bluetooth" "Bluetooth devices" \
+		"Sound" "Input, output and volume" \
+		"Power" "Power and battery settings" \
+		"Keyboard" "Keyboard options and shortcuts" \
+		"Mouse and Touchpad" "Mouse and pointing-device settings" \
+		"Appearance" "Ubuntu appearance settings" \
+		"Users" "User accounts" \
+		"Date and Time" "Clock and timezone" \
+		"System" "System information and details" \
+		--button="Open:0" \
+		--button="Cancel:1"
+)" || exit 0
+
+NAME="$(printf '%s' "$CHOICE" | cut -d'|' -f1)"
+
+case "$NAME" in
+	"Display")
+		arandr
+		;;
+	"Network")
+		XDG_CURRENT_DESKTOP=ubuntu:GNOME gnome-control-center network
+		;;
+	"Bluetooth")
+		XDG_CURRENT_DESKTOP=ubuntu:GNOME gnome-control-center bluetooth
+		;;
+	"Sound")
+		XDG_CURRENT_DESKTOP=ubuntu:GNOME gnome-control-center sound
+		;;
+	"Power")
+		XDG_CURRENT_DESKTOP=ubuntu:GNOME gnome-control-center power
+		;;
+	"Keyboard")
+		XDG_CURRENT_DESKTOP=ubuntu:GNOME gnome-control-center keyboard
+		;;
+	"Mouse and Touchpad")
+		XDG_CURRENT_DESKTOP=ubuntu:GNOME gnome-control-center mouse
+		;;
+	"Appearance")
+		XDG_CURRENT_DESKTOP=ubuntu:GNOME gnome-control-center appearance
+		;;
+	"Users")
+		XDG_CURRENT_DESKTOP=ubuntu:GNOME gnome-control-center user-accounts
+		;;
+	"Date and Time")
+		XDG_CURRENT_DESKTOP=ubuntu:GNOME gnome-control-center datetime
+		;;
+	"System")
+		XDG_CURRENT_DESKTOP=ubuntu:GNOME gnome-control-center system
+		;;
+esac

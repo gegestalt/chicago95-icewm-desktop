@@ -127,6 +127,7 @@ sudo apt-get install -y \
   dunst pcmanfm libfm-modules \
   network-manager-gnome \
   xxkb \
+  yad arandr \
   imagemagick \
   xdotool
 
@@ -267,6 +268,26 @@ echo "-- Installing the desktop-icon repaint watcher --"
 track "$HOME/.local/bin/desktop-icon-repaint-watch"
 cp "$REPO_DIR/dotfiles/local/bin/desktop-icon-repaint-watch" "$HOME/.local/bin/desktop-icon-repaint-watch"
 chmod +x "$HOME/.local/bin/desktop-icon-repaint-watch"
+
+# ---------------------------------------------------------------------------
+# 7c. Chicago95 Control Panel — the single "Settings" entry in the app grid
+#    and Start menu (fixes #28: without this, gnome-control-center's own
+#    org.gnome.Settings.desktop is the only "Settings" entry build-app-grid
+#    finds, and it's broken under IceWM — its Display panel depends on
+#    org.gnome.Mutter.DisplayConfig, a D-Bus service only Mutter/GNOME
+#    Shell provides, so every control in it silently does nothing here).
+#    This installs a yad-based picker fronting the individual panels
+#    instead, with Display routed to arandr (talks to X11 RandR directly,
+#    so it actually works) rather than gnome-control-center.
+# ---------------------------------------------------------------------------
+echo "-- Installing the Chicago95 Control Panel (Settings) --"
+track "$HOME/.local/bin/chicago95-settings"
+cp "$REPO_DIR/dotfiles/local/bin/chicago95-settings" "$HOME/.local/bin/chicago95-settings"
+chmod +x "$HOME/.local/bin/chicago95-settings"
+mkdir -p "$HOME/.local/share/applications"
+track "$HOME/.local/share/applications/chicago95-settings.desktop"
+cp "$REPO_DIR/dotfiles/local/share/applications/chicago95-settings.desktop" "$HOME/.local/share/applications/chicago95-settings.desktop"
+"$HOME/.local/bin/build-app-grid"
 
 # ---------------------------------------------------------------------------
 # 8. Desktop launcher icon

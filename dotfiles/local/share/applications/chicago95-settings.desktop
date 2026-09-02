@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Settings
+Comment=Chicago95 Control Panel
+Exec=chicago95-settings
+Icon=preferences-system
+Terminal=false
+StartupNotify=true
+Categories=Settings;

@@ -2,6 +2,25 @@
 
 export GTK_THEME=Chicago95
 
+# Fixes #28 ("screen not fullsize"): on some setups (observed on a VMware
+# guest) the X server comes up with a connected output already running a
+# mode other than its own preferred one — e.g. locked to whatever size was
+# negotiated at an earlier boot — leaving a visible gap of unused screen
+# instead of filling the real display. For each connected output, if its
+# current mode isn't the one xrandr itself marks preferred (the "+" in
+# `xrandr --query`), switch to that preferred mode. A no-op on ordinary
+# hardware, which is already running its preferred mode.
+if command -v xrandr >/dev/null 2>&1; then
+  xrandr --query | awk '/ connected /{print $1}' | while read -r output; do
+    preferred=$(xrandr --query | awk -v out="$output" '
+      $0 ~ "^"out" connected" {grab=1; next}
+      grab && /^[A-Za-z]/ {grab=0}
+      grab && / \+/ {print $1; exit}
+    ')
+    [ -n "$preferred" ] && xrandr --output "$output" --mode "$preferred"
+  done
+fi
+
 # Two keyboard groups (English, Turkish) for the "En"/"Tr" tray switcher
 # below to toggle between, plus: make both Windows/Super keys work as an
 # extra Alt too, so Super+Tab does window-switching

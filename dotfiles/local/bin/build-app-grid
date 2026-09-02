@@ -7,6 +7,7 @@ mkdir -p "$TARGET"
 find "$TARGET" -maxdepth 1 -type l -delete
 
 declare -A seen
+declare -A seen_name
 for dir in "$HOME/.local/share/applications" /usr/local/share/applications /usr/share/applications /var/lib/snapd/desktop/applications; do
   [ -d "$dir" ] || continue
   for f in "$dir"/*.desktop; do
@@ -15,6 +16,17 @@ for dir in "$HOME/.local/share/applications" /usr/local/share/applications /usr/
     [ -n "${seen[$id]}" ] && continue
     grep -q '^NoDisplay=true' "$f" 2>/dev/null && continue
     grep -q '^Hidden=true' "$f" 2>/dev/null && continue
+    # Same visible Name (e.g. a local override and the system's own
+    # "Settings" both showing up as "Settings") is still a duplicate to
+    # the user even with different filenames/Exec lines. Directories are
+    # scanned most-specific-first, so whichever copy comes from
+    # ~/.local/share/applications (a user or install.sh override) wins
+    # and the system-wide one is skipped.
+    name=$(grep -m1 '^Name=' "$f" 2>/dev/null | cut -d= -f2-)
+    if [ -n "$name" ]; then
+      [ -n "${seen_name[$name]}" ] && continue
+      seen_name[$name]=1
+    fi
     seen[$id]=1
     ln -sf "$f" "$TARGET/$id"
   done
