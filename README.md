@@ -21,8 +21,13 @@ falling back to stock GNOME apps.
 - **Terminal:** [Ghostty](https://ghostty.org/) — wired in as `TerminalCommand`
   and the Start menu/taskbar launcher
 - **File manager:** `pcmanfm`
-- **Settings manager:** `xfce4-settings-manager` (GTK3, themable — unlike GNOME
-  Control Center)
+- **Settings:** a `yad`-based Control Panel (`dotfiles/local/bin/chicago95-settings`)
+  fronting individual GNOME Control Center panels, plus `xfce4-settings-manager`
+  (GTK3, themable — unlike GNOME Control Center) as a separate "Settings Manager"
+  entry
+- **Display/resolution:** `arandr` (talks to X11 RandR directly — GNOME Control
+  Center's own Display panel needs Mutter's D-Bus service, which isn't present
+  under IceWM)
 - **Notifications:** `dunst`
 - **Network applet:** `network-manager-gnome` (`nm-applet`)
 - **Keyboard layout switcher:** `xxkb` — an "En"/"Tr" indicator in the
@@ -42,7 +47,26 @@ falling back to stock GNOME apps.
   category (`icewm-menu-fdo`), plus quick-launch shortcuts on top.
 - **A taskbar "Applications" button** (3x3 grid icon, matching Ubuntu's app-grid glyph) that opens `~/Applications`
   — a flat, one-page, alphabetized grid of *every* installed app, no category
-  folders. Kept in sync automatically on every login.
+  folders. Kept in sync automatically on every login. Entries are deduplicated
+  by their visible name as well as by filename, so a local override (like the
+  Chicago95 Control Panel below) cleanly replaces the system's own same-named
+  entry instead of both showing up side by side (see
+  [#28](https://github.com/gegestalt/chicago95-icewm-desktop/issues/28)).
+- **One working "Settings" entry, with a Display panel that isn't silently
+  broken.** GNOME Control Center's own `org.gnome.Settings.desktop` shows up
+  in the app grid regardless of desktop environment, but its Display panel
+  depends on `org.gnome.Mutter.DisplayConfig` — a D-Bus service only Mutter
+  (GNOME Shell's compositor) provides, so under IceWM every control in that
+  panel is silently non-functional. `chicago95-settings` is a small `yad`
+  picker that fronts the individual Control Center panels instead, with
+  Display routed to `arandr` (talks to X11 RandR directly) so it actually
+  works.
+- **The screen actually fills the display.** `dotfiles/icewm/startup` checks
+  every connected output against its own preferred mode on login and
+  switches to it if they differ — fixes a VM-observed case where the X
+  server came up already locked to an undersized mode, leaving a visible
+  gap of unused screen instead of filling the real display
+  ([#28](https://github.com/gegestalt/chicago95-icewm-desktop/issues/28)).
 - **Desktop icons that don't vanish when you drag them.** `pcmanfm --desktop`
   has a bug where a dragged icon's new position is saved correctly but
   never repainted until some unrelated screen event forces it to (see
