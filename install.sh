@@ -126,9 +126,9 @@ sudo apt-get install -y \
   gpicview evince mpv \
   dunst pcmanfm libfm-modules \
   network-manager-gnome \
-  xxkb \
   yad arandr \
   blueman pavucontrol xfce4-power-manager hardinfo2 \
+  python3-gi python3-cairo gir1.2-gtk-3.0 \
   imagemagick \
   xdotool
 
@@ -185,15 +185,6 @@ echo "Xft.dpi: $DPI" >> "$HOME/.Xresources"
 if command -v xrdb >/dev/null 2>&1 && [ -n "${DISPLAY:-}" ]; then
   xrdb -merge "$HOME/.Xresources" 2>/dev/null || true
 fi
-
-# ---------------------------------------------------------------------------
-# 3c. ~/.xxkbrc — the "En"/"Tr" layout switcher that lives in the taskbar
-#    tray. The two XKB groups it switches between ("us,tr") are set on
-#    every login by .icewm/startup, not here; this file only controls how
-#    xxkb displays and toggles them.
-# ---------------------------------------------------------------------------
-track "$HOME/.xxkbrc"
-cp "$REPO_DIR/dotfiles/xxkbrc" "$HOME/.xxkbrc"
 
 # ---------------------------------------------------------------------------
 # 4. IceWM dotfiles
@@ -289,6 +280,20 @@ mkdir -p "$HOME/.local/share/applications"
 track "$HOME/.local/share/applications/chicago95-settings.desktop"
 cp "$REPO_DIR/dotfiles/local/share/applications/chicago95-settings.desktop" "$HOME/.local/share/applications/chicago95-settings.desktop"
 "$HOME/.local/bin/build-app-grid"
+
+# ---------------------------------------------------------------------------
+# 7d. En/Tr keyboard-layout indicator and switcher, bottom-right of the
+#    taskbar tray (fixes #25: xxkb only supported a plain toggle/cycle on
+#    click, with no way to show a list of layouts with the current one
+#    highlighted, which is what was actually asked for — no packaged tool
+#    combines a themable Win95-style tray icon with a real picker menu, so
+#    this is a small custom GTK3 status icon instead). Runs for the life
+#    of the session; started from .icewm/startup.
+# ---------------------------------------------------------------------------
+echo "-- Installing the keyboard-layout picker --"
+track "$HOME/.local/bin/keyboard-layout-picker"
+cp "$REPO_DIR/dotfiles/local/bin/keyboard-layout-picker" "$HOME/.local/bin/keyboard-layout-picker"
+chmod +x "$HOME/.local/bin/keyboard-layout-picker"
 
 # ---------------------------------------------------------------------------
 # 8. Desktop launcher icon
@@ -428,14 +433,13 @@ fi
 #    XKBLAYOUT is actually configured makes it deterministic.
 #
 #    use-system-keyboard-layout also has to be turned on here, or ibus
-#    fights the "us,tr" two-group layout .icewm/startup sets up for the
-#    xxkb tray switcher: with it off (ibus's own default), ibus reapplies
-#    its single pinned engine's layout to the X server via its own XKB
-#    engine every time it (re)starts — collapsing "us,tr" back down to a
-#    lone "us" group moments after login, before xxkb has anything to
-#    toggle to. With it on, ibus leaves whatever setxkbmap already
-#    configured alone. Verified by restarting ibus-daemon with each
-#    setting and checking `setxkbmap -query` after.
+#    fights keyboard-layout-picker (the taskbar's En/Tr switcher): with it
+#    off (ibus's own default), ibus reapplies its single pinned engine's
+#    layout to the X server via its own XKB engine every time it
+#    (re)starts, silently reverting a manual switch to Turkish back to
+#    English moments later. With it on, ibus leaves whatever setxkbmap
+#    already configured alone. Verified by restarting ibus-daemon with
+#    each setting and checking `setxkbmap -query` after.
 # ---------------------------------------------------------------------------
 if command -v dconf >/dev/null 2>&1 && [ -f /etc/default/keyboard ]; then
   echo "-- Pinning ibus to the system keyboard layout --"
@@ -455,9 +459,9 @@ if command -v dconf >/dev/null 2>&1 && [ -f /etc/default/keyboard ]; then
 
   # ibus's own panel also puts an "EN" indicator in the tray — a plain
   # text label with no click-to-switch behavior (verified: left-clicking
-  # it doesn't change the active engine). Redundant now that xxkb (styled
-  # to match its look, see dotfiles/xxkbrc) is the actual clickable
-  # switcher; without this, both would show side by side in the tray.
+  # it doesn't change the active engine). Redundant now that
+  # keyboard-layout-picker is the actual clickable switcher; without
+  # this, both would show side by side in the tray.
   track_dconf /desktop/ibus/panel/show-icon-on-systray
   dconf write /desktop/ibus/panel/show-icon-on-systray false
 fi
