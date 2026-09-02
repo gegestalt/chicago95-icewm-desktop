@@ -30,7 +30,7 @@ falling back to stock GNOME apps.
   under IceWM)
 - **Notifications:** `dunst`
 - **Network applet:** `network-manager-gnome` (`nm-applet`)
-- **Keyboard layout switcher:** `xxkb` — an "En"/"Tr" indicator in the
+- **Keyboard layout switcher:** `xxkb` — an "EN"/"TR" indicator in the
   taskbar tray (bottom-right), click to toggle between English and
   Turkish
 - **Image/document/media viewers:** `gpicview`, `evince`, `mpv`
@@ -79,12 +79,16 @@ falling back to stock GNOME apps.
   keyboards where Alt and the Windows key sit right next to each other.
 - **English/Turkish keyboard switching from the taskbar.** Two XKB groups
   (`setxkbmap -layout us,tr`) are loaded on every login; `xxkb` shows the
-  active one as "En"/"Tr" in the tray and toggles it on click — no menu
-  digging, same idea as Windows' language bar. Turkish here is the
-  standard XKB `tr` (Q) layout — X11's `xkeyboard-config` has no
-  Apple-style "Turkish Mac" variant to select instead (checked directly
+  active one as a 32x32 "EN"/"TR" square in the tray and toggles it on
+  click — no menu digging, same idea as Windows' language bar. Turkish
+  here is the standard XKB `tr` (Q) layout — X11's `xkeyboard-config` has
+  no Apple-style "Turkish Mac" variant to select instead (checked directly
   against `/usr/share/X11/xkb/rules/evdev.xml`: the real `tr` variants
-  are `f`/`e`/`alt`/`intl`, none of them "mac").
+  are `f`/`e`/`alt`/`intl`, none of them "mac"), and its letter-key
+  mapping (Ğ/Ü, Ş/İ, Ö/Ç in the same positions) is identical to a real
+  Turkish MacBook keyboard's legend regardless — the two only differ in
+  modifier-key labeling (command/option vs. win/alt) and physical shape,
+  not in what any key types.
 - **HiDPI-correct window chrome.** The stock Chicago95 IceWM theme's title-bar
   buttons and borders are raw pixel-art sized for ~96 DPI screens; on a
   HiDPI display they render tiny inside an enlarged bar. This repo ships a
