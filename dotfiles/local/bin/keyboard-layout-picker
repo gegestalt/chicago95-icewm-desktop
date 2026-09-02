@@ -1,0 +1,117 @@
+#!/usr/bin/env python3
+# ~/.local/bin/keyboard-layout-picker — the En/Tr indicator in the taskbar
+# tray (bottom-right), replacing xxkb (fixes #25's redesign request).
+#
+# xxkb only supported a plain toggle/cycle on click — it had no way to
+# show a list of layouts with the current one highlighted, which is what
+# was asked for. Nothing in Ubuntu's repos combines "themable Win95-style
+# tray icon" with "click shows a real picker menu", so this is a small
+# custom GTK3 status icon instead: click shows a popup menu of layouts as
+# radio items (the active one pre-selected/highlighted), picking one
+# switches to it via setxkbmap and repaints the icon.
+#
+# The icon itself is drawn with cairo rather than shipped as an image
+# file, so its two states ("EN"/"TR": black square, bold turquoise
+# #51A2DA text, matching the taskbar's other icons) never drift out of
+# sync with what LAYOUTS below actually lists.
+import subprocess
+
+import cairo
+import gi
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("GdkPixbuf", "2.0")
+from gi.repository import GdkPixbuf, GLib, Gtk  # noqa: E402
+
+LAYOUTS = [("us", "EN"), ("tr", "TR")]
+XKB_OPTIONS = "altwin:alt_win"
+ICON_SIZE = 32
+
+
+def current_layout():
+    try:
+        out = subprocess.run(
+            ["setxkbmap", "-query"], capture_output=True, text=True, check=True
+        ).stdout
+        for line in out.splitlines():
+            if line.startswith("layout:"):
+                return line.split(":", 1)[1].strip().split(",")[0]
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass
+    return "us"
+
+
+def set_layout(code):
+    # A full single-layout swap, not a group switch: simpler to reason
+    # about than maintaining a fixed multi-group XKB layout, and it's
+    # exactly what xfce4-keyboard-settings/GNOME's own layout switching
+    # does too.
+    subprocess.run(["setxkbmap", "-layout", code, "-option", XKB_OPTIONS], check=False)
+
+
+def render_icon(label):
+    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, ICON_SIZE, ICON_SIZE)
+    ctx = cairo.Context(surface)
+    ctx.set_source_rgb(0, 0, 0)
+    ctx.rectangle(0, 0, ICON_SIZE, ICON_SIZE)
+    ctx.fill()
+    ctx.set_source_rgb(0x51 / 255, 0xA2 / 255, 0xDA / 255)
+    ctx.select_font_face("sans-serif", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
+    ctx.set_font_size(14)
+    xb, yb, w, h, _, _ = ctx.text_extents(label)
+    ctx.move_to(ICON_SIZE / 2 - w / 2 - xb, ICON_SIZE / 2 - h / 2 - yb)
+    ctx.show_text(label)
+    surface.flush()
+
+    # cairo's ARGB32 is native-endian BGRA; GdkPixbuf wants RGBA — swap
+    # the R and B bytes of each pixel rather than assume a byte order.
+    buf = bytearray(surface.get_data())
+    for i in range(0, len(buf), 4):
+        buf[i], buf[i + 2] = buf[i + 2], buf[i]
+    return GdkPixbuf.Pixbuf.new_from_data(
+        bytes(buf), GdkPixbuf.Colorspace.RGB, True, 8,
+        ICON_SIZE, ICON_SIZE, surface.get_stride(),
+    )
+
+
+class KeyboardLayoutPicker:
+    def __init__(self):
+        self.status_icon = Gtk.StatusIcon()
+        self.status_icon.connect("activate", self.show_menu)
+        self.status_icon.connect("popup-menu", self.show_menu)
+        self.refresh_icon()
+        # Catches layout changes made outside this picker (e.g. a hotkey,
+        # or ibus reasserting its own pinned engine) so the icon doesn't
+        # go stale.
+        GLib.timeout_add_seconds(2, self.refresh_icon)
+
+    def refresh_icon(self):
+        code = current_layout()
+        label = dict(LAYOUTS).get(code, code[:2].upper())
+        self.status_icon.set_from_pixbuf(render_icon(label))
+        return True
+
+    def show_menu(self, icon, *args):
+        current = current_layout()
+        menu = Gtk.Menu()
+        group = None
+        for code, label in LAYOUTS:
+            item = Gtk.RadioMenuItem.new_with_label(group, label)
+            group = item.get_group()
+            item.set_active(code == current)
+            item.connect("activate", self.on_select, code)
+            menu.append(item)
+        menu.show_all()
+        menu.popup(
+            None, None, Gtk.StatusIcon.position_menu, icon,
+            0, Gtk.get_current_event_time(),
+        )
+
+    def on_select(self, item, code):
+        set_layout(code)
+        self.refresh_icon()
+
+
+if __name__ == "__main__":
+    KeyboardLayoutPicker()
+    Gtk.main()

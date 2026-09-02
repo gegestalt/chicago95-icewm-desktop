@@ -30,9 +30,10 @@ falling back to stock GNOME apps.
   under IceWM)
 - **Notifications:** `dunst`
 - **Network applet:** `network-manager-gnome` (`nm-applet`)
-- **Keyboard layout switcher:** `xxkb` — an "EN"/"TR" indicator in the
-  taskbar tray (bottom-right), click to toggle between English and
-  Turkish
+- **Keyboard layout switcher:** `keyboard-layout-picker`
+  (`dotfiles/local/bin/keyboard-layout-picker`) — a small custom GTK3 tray
+  icon; an "EN"/"TR" indicator in the taskbar tray (bottom-right), click
+  for a menu of layouts with the active one highlighted
 - **Image/document/media viewers:** `gpicview`, `evince`, `mpv`
 - **Display manager:** LightDM, themed to match
 - **Boot splash:** Plymouth, running the vendored Chicago95 boot animation
@@ -77,16 +78,20 @@ falling back to stock GNOME apps.
   an extra Alt (`altwin:alt_win`), so Alt+Tab's window switcher
   (`KeySysSwitchNext`) also fires on Super+Tab — handy on compact/60%
   keyboards where Alt and the Windows key sit right next to each other.
-- **English/Turkish keyboard switching from the taskbar.** Two XKB groups
-  (`setxkbmap -layout us,tr`) are loaded on every login; `xxkb` shows the
-  active one as a 32x32 "EN"/"TR" square in the tray and toggles it on
-  click — no menu digging, same idea as Windows' language bar. Turkish
-  here is the standard XKB `tr` (Q) layout — X11's `xkeyboard-config` has
-  no Apple-style "Turkish Mac" variant to select instead (checked directly
-  against `/usr/share/X11/xkb/rules/evdev.xml`: the real `tr` variants
-  are `f`/`e`/`alt`/`intl`, none of them "mac"), and its letter-key
-  mapping (Ğ/Ü, Ş/İ, Ö/Ç in the same positions) is identical to a real
-  Turkish MacBook keyboard's legend regardless — the two only differ in
+- **English/Turkish keyboard switching from the taskbar.** A 32x32
+  "EN"/"TR" square in the tray — click it for a menu of layouts with the
+  active one shown selected, pick one to switch (via `setxkbmap`), same
+  idea as Windows' language bar but with the picker GNOME/Windows both
+  use rather than a blind toggle. Custom-built
+  (`dotfiles/local/bin/keyboard-layout-picker`, a small GTK3 status icon)
+  because nothing packaged combines a themable Win95-style tray icon with
+  an actual picker menu. Turkish here is the standard XKB `tr` (Q) layout
+  — X11's `xkeyboard-config` has no Apple-style "Turkish Mac" variant to
+  select instead (checked directly against
+  `/usr/share/X11/xkb/rules/evdev.xml`: the real `tr` variants are
+  `f`/`e`/`alt`/`intl`, none of them "mac"), and its letter-key mapping
+  (Ğ/Ü, Ş/İ, Ö/Ç in the same positions) is identical to a real Turkish
+  MacBook keyboard's legend regardless — the two only differ in
   modifier-key labeling (command/option vs. win/alt) and physical shape,
   not in what any key types.
 - **HiDPI-correct window chrome.** The stock Chicago95 IceWM theme's title-bar
@@ -205,7 +210,7 @@ optional/migrate-firefox-to-deb.sh  snap -> .deb Firefox migration (opt-in)
 dotfiles/icewm/                   menu, toolbar, preferences, theme assets (1x + 2x)
 dotfiles/config/                  gtk-3.0, gtk-4.0, mimeapps.list, dunst
 dotfiles/local/bin/build-app-grid script that (re)builds ~/Applications
-dotfiles/xxkbrc                   -> ~/.xxkbrc, the En/Tr taskbar layout switcher
+dotfiles/local/bin/keyboard-layout-picker  the En/Tr taskbar layout switcher
 icons/chicago95-applications/     the taskbar "Applications" icon, all sizes
 games/clacktype/                  self-contained typing-test game (no deps)
 system/plymouth/Chicago95/        boot theme (vendored, see ATTRIBUTION.md)
