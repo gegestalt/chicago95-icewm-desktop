@@ -22,12 +22,16 @@ falling back to stock GNOME apps.
   and the Start menu/taskbar launcher
 - **File manager:** `pcmanfm`
 - **Settings:** a `yad`-based Control Panel (`dotfiles/local/bin/chicago95-settings`)
-  fronting individual GNOME Control Center panels, plus `xfce4-settings-manager`
-  (GTK3, themable — unlike GNOME Control Center) as a separate "Settings Manager"
-  entry
-- **Display/resolution:** `arandr` (talks to X11 RandR directly — GNOME Control
-  Center's own Display panel needs Mutter's D-Bus service, which isn't present
-  under IceWM)
+  fronting a themable GTK3 tool per category — `arandr` (Display), `nm-connection-editor`
+  (Network), `blueman` (Bluetooth), `pavucontrol` (Sound), `xfce4-power-manager-settings`
+  (Power), and `xfce4-settings`' own Keyboard/Mouse/Appearance panels — instead of
+  GNOME Control Center, whose GTK4/libadwaita panels can't be reskinned and, for
+  several categories, depend on session daemons (Mutter, gsd) a plain IceWM
+  session doesn't run. Users and Date & Time stay on GNOME Control Center (no
+  themable GTK3 equivalent ships in Ubuntu's repos for either, and both work
+  fine regardless — their backends, accountsservice and systemd-timedated, don't
+  need Mutter or gsd). `xfce4-settings-manager` remains available separately as
+  its own "Settings Manager" app-grid entry.
 - **Notifications:** `dunst`
 - **Network applet:** `network-manager-gnome` (`nm-applet`)
 - **Keyboard layout switcher:** `keyboard-layout-picker`
@@ -53,15 +57,18 @@ falling back to stock GNOME apps.
   Chicago95 Control Panel below) cleanly replaces the system's own same-named
   entry instead of both showing up side by side (see
   [#28](https://github.com/gegestalt/chicago95-icewm-desktop/issues/28)).
-- **One working "Settings" entry, with a Display panel that isn't silently
-  broken.** GNOME Control Center's own `org.gnome.Settings.desktop` shows up
-  in the app grid regardless of desktop environment, but its Display panel
-  depends on `org.gnome.Mutter.DisplayConfig` — a D-Bus service only Mutter
-  (GNOME Shell's compositor) provides, so under IceWM every control in that
-  panel is silently non-functional. `chicago95-settings` is a small `yad`
-  picker that fronts the individual Control Center panels instead, with
-  Display routed to `arandr` (talks to X11 RandR directly) so it actually
-  works.
+- **One working "Settings" entry, themed to match and actually functional.**
+  GNOME Control Center's own `org.gnome.Settings.desktop` shows up in the app
+  grid regardless of desktop environment, but its GTK4/libadwaita panels can't
+  be reskinned, and several depend on session daemons a plain IceWM session
+  doesn't run — Display needs `org.gnome.Mutter.DisplayConfig` (Mutter/GNOME
+  Shell only), Power needs its own daemon started (`xfce4-power-manager`,
+  now started from `.icewm/startup`) — so those panels open but every control
+  in them silently does nothing (see
+  [#29](https://github.com/gegestalt/chicago95-icewm-desktop/issues/29)).
+  `chicago95-settings` is a small `yad` picker that fronts a themable,
+  actually-working GTK3 tool per category instead (see the tech-stack entry
+  above for the full mapping).
 - **The screen actually fills the display.** `dotfiles/icewm/startup` checks
   every connected output against its own preferred mode on login and
   switches to it if they differ — fixes a VM-observed case where the X

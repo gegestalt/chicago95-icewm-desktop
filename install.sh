@@ -127,6 +127,7 @@ sudo apt-get install -y \
   dunst pcmanfm libfm-modules \
   network-manager-gnome \
   yad arandr \
+  blueman pavucontrol xfce4-power-manager hardinfo2 \
   python3-gi python3-cairo gir1.2-gtk-3.0 \
   imagemagick \
   xdotool
