@@ -21,21 +21,18 @@ if command -v xrandr >/dev/null 2>&1; then
   done
 fi
 
-# Two keyboard groups (English, Turkish) for the "En"/"Tr" tray switcher
-# below to toggle between, plus: make both Windows/Super keys work as an
-# extra Alt too, so Super+Tab does window-switching
-# (KeySysSwitchNext="Alt+Tab") on compact/60% keyboards where Alt and Win
-# sit right next to each other. The altwin:alt_win option is additive —
+# Make both Windows/Super keys work as an extra Alt too, so Super+Tab
+# does window-switching (KeySysSwitchNext="Alt+Tab") on compact/60%
+# keyboards where Alt and Win sit right next to each other. Additive —
 # appended to whatever XKB options are already active (e.g. from
-# /etc/default/keyboard) — but -layout replaces whatever single layout
-# was active, which is the point: it's what turns "us" into "us,tr" so
-# there's a second group to switch to at all.
-command -v setxkbmap >/dev/null 2>&1 && setxkbmap -layout "us,tr" -option "altwin:alt_win"
+# /etc/default/keyboard) rather than replacing them.
+command -v setxkbmap >/dev/null 2>&1 && setxkbmap -option "altwin:alt_win"
 
-# "En"/"Tr" keyboard-layout indicator and switcher, bottom-right of the
-# taskbar (IceWM's system tray) — click it to toggle the two groups just
-# loaded above. Config: ~/.xxkbrc.
-command -v xxkb >/dev/null 2>&1 && xxkb &
+# En/Tr keyboard-layout indicator and switcher, bottom-right of the
+# taskbar (IceWM's system tray). Click it to pick a layout from a menu
+# (the active one shown selected) rather than just toggling — see
+# keyboard-layout-picker itself for why this isn't xxkb.
+command -v python3 >/dev/null 2>&1 && "$HOME/.local/bin/keyboard-layout-picker" &
 
 # XSETTINGS provider for GTK apps (icon theme, font, DPI, cursor). IceWM
 # doesn't run one itself, and without it GTK falls back to raw toolkit
