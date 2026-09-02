@@ -128,6 +128,7 @@ sudo apt-get install -y \
   network-manager-gnome \
   xxkb \
   yad arandr \
+  blueman pavucontrol xfce4-power-manager hardinfo2 \
   imagemagick \
   xdotool
 

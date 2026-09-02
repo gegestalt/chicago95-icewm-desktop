@@ -1,21 +1,30 @@
 #!/bin/bash
 # ~/.local/bin/chicago95-settings — the taskbar/app-grid "Settings" entry.
 #
-# A single yad picker fronting the individual GNOME Control Center panels,
-# rather than launching gnome-control-center's own multi-panel shell (its
-# GTK4/libadwaita chrome can't be reskinned to match Chicago95 — see the
-# README's "What it doesn't do"). XDG_CURRENT_DESKTOP=ubuntu:GNOME is set
-# on each launch because several panels gate their own UI on running under
-# a recognized desktop session, which IceWM isn't.
+# A yad picker fronting a small, themable, GTK3 tool per category instead
+# of GNOME Control Center's own panels (fixes #29). Two problems with the
+# GNOME panels drove this:
 #
-# Display is the one exception: gnome-control-center's display panel talks
-# to org.gnome.Mutter.DisplayConfig over D-Bus, a service Mutter (GNOME
-# Shell's compositor) provides and IceWM has no equivalent for — under
-# IceWM the panel opens but every control in it is silently non-functional
-# (confirmed via its own stderr: "Error calling GetCurrentState:
-# GDBus.Error:org.freedesktop.DBus.Error.NameHasNoOwner: Name
-# 'org.gnome.Mutter.DisplayConfig' does not exist"). arandr talks to X11
-# RandR directly instead, so it actually works here.
+# 1. Function: several panels depend on daemons a plain IceWM session
+#    doesn't run. Display needs org.gnome.Mutter.DisplayConfig (Mutter/
+#    GNOME Shell only — confirmed via its own stderr: "Error calling
+#    GetCurrentState: GDBus.Error:...NameHasNoOwner: Name
+#    'org.gnome.Mutter.DisplayConfig' does not exist"). Power similarly
+#    needs its own daemon running (xfce4-power-manager-settings itself
+#    prompts "Xfce4 Power Manager is not running" until it is — see the
+#    startup dotfile, which now starts it). Every control in an affected
+#    panel opens fine but silently does nothing.
+# 2. Design consistency: GNOME Control Center is GTK4/libadwaita, which
+#    cannot be reskinned to match Chicago95 at all (see the README's
+#    "What it doesn't do") — even the panels that DO work look like a
+#    modern GNOME popup dropped into a Windows-95 desktop.
+#
+# Users and Date/Time are the two exceptions still routed to GNOME
+# Control Center: no themable GTK3 equivalent ships in Ubuntu's repos for
+# either, and both actually work under IceWM regardless, because their
+# backends (accountsservice and systemd-timedated respectively) are
+# standalone D-Bus services with no Mutter/gsd dependency — verified by
+# checking what each panel actually talks to, not just that it opens.
 #
 # No literal "&" in any row label below: yad's --list renders each cell as
 # Pango markup, and a bare "&" is invalid markup — it doesn't error, it
@@ -43,7 +52,7 @@ CHOICE="$(
 		"Power" "Power and battery settings" \
 		"Keyboard" "Keyboard options and shortcuts" \
 		"Mouse and Touchpad" "Mouse and pointing-device settings" \
-		"Appearance" "Ubuntu appearance settings" \
+		"Appearance" "Theme, icons and fonts" \
 		"Users" "User accounts" \
 		"Date and Time" "Clock and timezone" \
 		"System" "System information and details" \
@@ -58,25 +67,25 @@ case "$NAME" in
 		arandr
 		;;
 	"Network")
-		XDG_CURRENT_DESKTOP=ubuntu:GNOME gnome-control-center network
+		nm-connection-editor
 		;;
 	"Bluetooth")
-		XDG_CURRENT_DESKTOP=ubuntu:GNOME gnome-control-center bluetooth
+		blueman-manager
 		;;
 	"Sound")
-		XDG_CURRENT_DESKTOP=ubuntu:GNOME gnome-control-center sound
+		pavucontrol
 		;;
 	"Power")
-		XDG_CURRENT_DESKTOP=ubuntu:GNOME gnome-control-center power
+		xfce4-power-manager-settings
 		;;
 	"Keyboard")
-		XDG_CURRENT_DESKTOP=ubuntu:GNOME gnome-control-center keyboard
+		xfce4-keyboard-settings
 		;;
 	"Mouse and Touchpad")
-		XDG_CURRENT_DESKTOP=ubuntu:GNOME gnome-control-center mouse
+		xfce4-mouse-settings
 		;;
 	"Appearance")
-		XDG_CURRENT_DESKTOP=ubuntu:GNOME gnome-control-center appearance
+		xfce4-appearance-settings
 		;;
 	"Users")
 		XDG_CURRENT_DESKTOP=ubuntu:GNOME gnome-control-center user-accounts
@@ -85,6 +94,6 @@ case "$NAME" in
 		XDG_CURRENT_DESKTOP=ubuntu:GNOME gnome-control-center datetime
 		;;
 	"System")
-		XDG_CURRENT_DESKTOP=ubuntu:GNOME gnome-control-center system
+		hardinfo2
 		;;
 esac

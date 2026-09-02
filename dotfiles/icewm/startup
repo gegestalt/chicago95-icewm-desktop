@@ -44,6 +44,12 @@ command -v xxkb >/dev/null 2>&1 && xxkb &
 # their very first frame instead of a fresh login briefly looking wrong.
 xfsettingsd &
 
+# Power-management daemon backing the Control Panel's "Power" entry
+# (xfce4-power-manager-settings) — without it running, that settings
+# dialog just prompts "Xfce4 Power Manager is not running" instead of
+# showing any controls (fixes #29).
+command -v xfce4-power-manager >/dev/null 2>&1 && xfce4-power-manager &
+
 # Keep the flat "Applications" grid (~/Applications) in sync with installed apps.
 "$HOME/.local/bin/build-app-grid" &
 
