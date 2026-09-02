@@ -75,6 +75,17 @@ ScrollBarY=24
 TrayIconMaxWidth=32
 TrayIconMaxHeight=32
 
+# The built-in CPU/Memory/Network taskbar graphs default to 20px wide
+# each with almost no gap between them — at this display's DPI they read
+# as an illegible, tightly-packed smear of color rather than three
+# distinct graphs. Doubled the width so each is actually readable
+# (verified via screenshot: 20x38 each before, 40x38 after).
+# TaskBarGraphHeight doesn't seem to affect these — tried 32, height
+# stayed 38 regardless — so left unset rather than ship a no-op value.
+TaskBarCPUSamples=40
+TaskBarMEMSamples=40
+TaskBarNetSamples=40
+
 TitleFontNameXft="Adwaita Sans:size=15"
 MenuFontNameXft="Adwaita Sans:size=15"
 StatusFontNameXft="Adwaita Sans:size=15"
