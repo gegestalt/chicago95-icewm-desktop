@@ -72,9 +72,15 @@ nm-applet &
 # VMware host/guest clipboard and drag/drop (no-op outside a VMware VM).
 [ -x /usr/bin/vmware-user ] && /usr/bin/vmware-user >/tmp/vmware-user.log 2>&1 &
 
-# Compositor (soft shadows, rounded corners). Tuned for low CPU: see
-# ~/.config/picom/picom.conf.
-command -v picom >/dev/null 2>&1 && { pgrep -u "$USER" -x picom >/dev/null || picom --config "$HOME/.config/picom/picom.conf" -b; }
+# Compositor (window shadows, rounded window corners): OFF by default.
+# Without GPU acceleration (VMware: "Accelerate 3D graphics" off, renderer
+# llvmpipe) picom either repaints only damaged areas, which on vmwgfx left
+# stale patches and blank menus, or repaints everything, which costs a CPU
+# core. Everything draws correctly without it. To turn it on, set
+# COMPOSITOR=1 in ~/.config/chicago-os/display.conf and log in again.
+if grep -qs '^COMPOSITOR=1' "$HOME/.config/chicago-os/display.conf" && command -v picom >/dev/null 2>&1; then
+  pgrep -u "$USER" -x picom >/dev/null || picom --config "$HOME/.config/picom/picom.conf" -b
+fi
 
 # Keeps fonts, window chrome, icons and cursor at the right size for the
 # current resolution and re-applies on every resize of the VM window.

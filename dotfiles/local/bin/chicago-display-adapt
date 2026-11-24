@@ -51,6 +51,9 @@ DESKTOP_ICON=32
 CURSOR=24
 # 1 = resize the desktop to the VM window whenever the host changes it
 FOLLOW_HOST=1
+# 1 = window shadows/rounded window corners (picom). Needs GPU acceleration
+# to be smooth; read at login.
+COMPOSITOR=0
 UI_FONT='Ubuntu Sans'
 MONO_FONT='JetBrains Mono'
 EOF
@@ -244,7 +247,10 @@ apply() {
   width=${size%x*}
   scale=$(pick_scale "$width")
   new_state="$size $scale $(base_theme) $(stat -c %Y "$CONF")"
-  if [ "$force" != force ] && [ -f "$STATE" ] && [ "$(sed -n 's/^KEY=//p' "$STATE")" = "$new_state" ]; then
+  # Modes: ""     = on a screen event, skip if nothing changed;
+  #        login  = always set DPI/fonts, restart nothing unless the look changed;
+  #        force  = redo everything.
+  if [ -z "$force" ] && [ -f "$STATE" ] && [ "$(sed -n 's/^KEY=//p' "$STATE")" = "$new_state" ]; then
     return 0
   fi
 
@@ -291,7 +297,17 @@ apply() {
     sed -i "s/^big_icon_size=.*/big_icon_size=$icon/" "$libfm"
   fi
 
-  printf 'KEY=%s\nSCALE=%s\nGDK_SCALE=%s\nDPI=%s\n' "$new_state" "$scale" "$gdk" "$dpi" > "$STATE"
+  # Restarting IceWM, the desktop and the dock is only needed when the scale
+  # (or theme/config) changed. A plain resolution change at the same scale
+  # is handled by each of them on its own, so leave them running: restarts
+  # during a window-drag resize are what made frames and menus flicker.
+  local old_look new_look
+  old_look=$(sed -n 's/^LOOK=//p' "$STATE" 2>/dev/null)
+  new_look="$scale $theme $(stat -c %Y "$CONF") $icon"
+  printf 'KEY=%s\nLOOK=%s\nSCALE=%s\nGDK_SCALE=%s\nDPI=%s\n' "$new_state" "$new_look" "$scale" "$gdk" "$dpi" > "$STATE"
+  if [ "$force" != force ] && [ "$old_look" = "$new_look" ]; then
+    return 0
+  fi
 
   # 4. Reload the shell pieces (IceWM restarts in place, windows stay).
   pgrep -u "$USER" -x icewm >/dev/null && icewm -r >/dev/null 2>&1
@@ -319,7 +335,7 @@ flock -n 9 || { log "already running"; exit 0; }
 exec >>"$STATE_DIR/display.log" 2>&1
 
 follow_host_size
-apply force
+apply login
 # Block on RandR events; collapse bursts (a window drag-resize fires many)
 # into one apply once the screen has been stable for ~0.7s.
 xev -root -event randr 2>/dev/null | while read -r line; do

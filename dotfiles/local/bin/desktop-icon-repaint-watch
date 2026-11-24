@@ -8,25 +8,42 @@
 # inside pcmanfm itself; neither a compositor nor `xrefresh` (both tested)
 # can paper over it from outside.
 #
-# This watches the desktop layout file pcmanfm writes to on every drag and,
-# the moment it changes, clicks a fixed empty spot to force the repaint
-# pcmanfm itself isn't triggering, then restores the pointer to where it
-# was. Polls every 50ms so the fix lands well under human perception.
-CONF="$HOME/.config/pcmanfm/icewm/desktop-items-0.conf"
-LAST=""
-while true; do
-  if [ -f "$CONF" ]; then
+# When pcmanfm saves the layout file after a drag, this clicks once to make
+# pcmanfm repaint. Safety rules (an earlier version clicked a fixed screen
+# spot, which could land on the dock or close an open menu):
+#   - only when the pointer is over the desktop itself (an icon was just
+#     dropped there), never over a window, menu or the dock;
+#   - the click goes where the pointer already is: on the icon that was
+#     just dropped, which is selected after a drop anyway;
+#   - event-driven with inotifywait when available (no busy polling).
+CONF_DIR="$HOME/.config/pcmanfm/icewm"
+CONF="$CONF_DIR/desktop-items-0.conf"
+
+pointer_on_desktop() {
+  eval "$(xdotool getmouselocation --shell 2>/dev/null)" || return 1
+  [ -n "${WINDOW:-}" ] || return 1
+  xprop -id "$WINDOW" _NET_WM_WINDOW_TYPE 2>/dev/null | grep -q _NET_WM_WINDOW_TYPE_DESKTOP
+}
+
+repaint() {
+  # Let the drop finish (button released) before clicking.
+  sleep 0.15
+  pointer_on_desktop && xdotool click 1
+}
+
+mkdir -p "$CONF_DIR"
+if command -v inotifywait >/dev/null 2>&1; then
+  # Watch the directory: pcmanfm replaces the file on save.
+  inotifywait -m -q -e close_write,moved_to --format '%f' "$CONF_DIR" 2>/dev/null |
+  while read -r name; do
+    [ "$name" = "desktop-items-0.conf" ] && repaint
+  done
+else
+  LAST="$(stat -c %Y "$CONF" 2>/dev/null)"
+  while sleep 0.3; do
     CUR="$(stat -c %Y "$CONF" 2>/dev/null)"
     if [ -n "$CUR" ] && [ "$CUR" != "$LAST" ]; then
-      if [ -n "$LAST" ]; then
-        POS="$(xdotool getmouselocation --shell 2>/dev/null)"
-        OX="$(echo "$POS" | sed -n 's/^X=//p')"
-        OY="$(echo "$POS" | sed -n 's/^Y=//p')"
-        xdotool mousemove 1500 950 click 1
-        [ -n "$OX" ] && [ -n "$OY" ] && xdotool mousemove "$OX" "$OY"
-      fi
-      LAST="$CUR"
+      LAST="$CUR"; repaint
     fi
-  fi
-  sleep 0.05
-done
+  done
+fi
