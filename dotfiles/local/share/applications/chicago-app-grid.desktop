@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Applications
+Comment=All installed applications
+Exec=chicago-app-grid
+Icon=chicago95-applications
+NoDisplay=true

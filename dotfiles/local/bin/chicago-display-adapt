@@ -1,0 +1,332 @@
+#!/usr/bin/env bash
+# chicago-display-adapt — keeps the whole desktop at the right size and
+# sharpness for whatever resolution the screen currently has.
+#
+# Why this exists: the previous approach measured DPI once at install time
+# and baked fixed pixel sizes (and fixed *point* sizes on top of a raised
+# DPI, so text was scaled twice) into IceWM's config. In a VM the
+# resolution changes every time the window is resized or moved between a
+# Retina and a non-Retina screen, so a one-shot value is wrong most of
+# the time. This script runs for the whole session, waits for RandR
+# "screen changed" events (no polling), and on every real change:
+#
+#   1. picks a UI scale for the new resolution (or the one you pinned),
+#   2. sets one DPI for every toolkit — GTK3/GTK4 via XSETTINGS
+#      (xfsettingsd), IceWM/Firefox/Qt/Xft via the Xft.dpi resource,
+#   3. regenerates IceWM's pixel metrics (title bar, borders, icons, tray)
+#      in ~/.icewm/prefoverride — fonts stay at their point size because
+#      the DPI already scales them,
+#   4. renders a sharp copy of the IceWM theme's pixel-art at that scale
+#      (cached), and points IceWM at it,
+#   5. resizes the desktop icons and the cursor, then restarts IceWM in
+#      place (windows stay open).
+#
+# Config: ~/.config/chicago-os/display.conf
+#   SCALE=auto           # or 1, 1.25, 1.5, 1.75, 2, 2.5, 3
+#   TARGET_WIDTH=1440    # auto mode: largest scale that still leaves at
+#                        # least this many logical pixels across (macOS's
+#                        # "looks like" sizes land in 1440-1728)
+#   DESKTOP_ICON=32      # desktop icon size at 1x (snapped to 16/22/24/32/48)
+#   CURSOR=24            # cursor size at 1x
+#
+# Usage: chicago-display-adapt           run as session daemon
+#        chicago-display-adapt --once    apply once and exit
+#        chicago-display-adapt --force   apply once even if nothing changed
+set -u
+
+CONF_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/chicago-os"
+CONF="$CONF_DIR/display.conf"
+STATE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/chicago-os"
+STATE="$STATE_DIR/display.state"
+ICEWM_DIR="$HOME/.icewm"
+SCALED_SUFFIX="-chicago-x"
+
+mkdir -p "$STATE_DIR" "$CONF_DIR"
+[ -f "$CONF" ] || cat > "$CONF" <<'EOF'
+# Chicago OS display settings — read by chicago-display-adapt.
+# After editing, run:  chicago-display-adapt --force
+SCALE=auto
+TARGET_WIDTH=1440
+DESKTOP_ICON=32
+CURSOR=24
+# 1 = resize the desktop to the VM window whenever the host changes it
+FOLLOW_HOST=1
+UI_FONT='Ubuntu Sans'
+MONO_FONT='JetBrains Mono'
+EOF
+
+log() { printf '%s %s\n' "$(date '+%F %T')" "$*" >&2; }
+
+load_conf() {
+  SCALE=auto TARGET_WIDTH=1440 DESKTOP_ICON=32 CURSOR=24 FOLLOW_HOST=1
+  UI_FONT='Ubuntu Sans' MONO_FONT='JetBrains Mono'
+  # shellcheck disable=SC1090
+  . "$CONF"
+}
+
+# Float helpers (awk keeps this dependency-free).
+mul()   { awk -v a="$1" -v b="$2" 'BEGIN{printf "%d", a*b + 0.5}'; }
+is_int(){ awk -v a="$1" 'BEGIN{exit !(a == int(a))}'; }
+
+screen_size() {
+  xrandr --current 2>/dev/null | sed -n 's/.*current \([0-9]*\) x \([0-9]*\).*/\1x\2/p' | head -1
+}
+
+# VMware (and other hosts) announce the guest window's new size by changing
+# the output's *preferred* mode; GNOME follows that, IceWM doesn't. When the
+# running mode differs from the preferred one, switch to it. The resulting
+# screen change then drives the normal re-scale below.
+follow_host_size() {
+  [ "${FOLLOW_HOST:-1}" = 1 ] || return 0
+  xrandr --current 2>/dev/null | awk '
+    / connected/ { out = $1; next }
+    /^[^ ]/      { out = "" }
+    out != "" && /^ / {
+      if ($0 ~ /\*/) cur[out] = $1
+      if ($0 ~ /\+/) pref[out] = $1
+    }
+    END { for (o in pref) if (cur[o] != pref[o]) print o }' |
+  while read -r o; do
+    log "host window changed: $o -> preferred mode"
+    xrandr --output "$o" --auto
+  done
+}
+
+pick_scale() {
+  local width="$1"
+  if [ "$SCALE" != auto ]; then echo "$SCALE"; return; fi
+  for s in 3 2.5 2 1.75 1.5 1.25; do
+    if awk -v w="$width" -v s="$s" -v t="$TARGET_WIDTH" 'BEGIN{exit !(w/s >= t)}'; then
+      echo "$s"; return
+    fi
+  done
+  echo 1
+}
+
+# Theme currently selected in ~/.icewm/theme, minus any suffix we added.
+base_theme() {
+  local t
+  t=$(sed -n 's/^Theme="\{0,1\}\([^/"]*\).*/\1/p' "$ICEWM_DIR/theme" 2>/dev/null | head -1)
+  [ -n "$t" ] || t=Chicago
+  echo "${t%"$SCALED_SUFFIX"*}"
+}
+
+theme_src_dir() {
+  local name="$1"
+  for d in "$ICEWM_DIR/themes/$name" /usr/share/icewm/themes/"$name"; do
+    [ -f "$d/default.theme" ] && { echo "$d"; return; }
+  done
+}
+
+# Integer value of KEY in a theme file (first match), or the default.
+theme_val() {
+  local v
+  v=$(sed -n "s/^$2=\([0-9]*\).*/\1/p" "$1" | head -1)
+  echo "${v:-$3}"
+}
+
+# Render the theme's images at $scale into a cached sibling theme.
+# Whole multiples use nearest-neighbour (pixel-perfect retro edges);
+# fractional ones use a sharp Catmull-Rom filter so there is no blur
+# and no uneven "doubled" pixel rows.
+build_scaled_theme() {
+  local name="$1" scale="$2" src dst tag stamp
+  src=$(theme_src_dir "$name") || true
+  [ -n "$src" ] || return 1
+  tag=$(mul "$scale" 100)
+  dst="$ICEWM_DIR/themes/$name$SCALED_SUFFIX$tag"
+  stamp="$dst/.chicago-scaled-from"
+  if [ -f "$stamp" ] && [ "$(cat "$stamp")" = "$src $(stat -c %Y "$src")" ]; then
+    echo "$dst"; return 0
+  fi
+  command -v magick >/dev/null 2>&1 || return 1
+  log "rendering theme $name at ${scale}x -> $dst"
+  rm -rf "$dst.tmp"; mkdir -p "$dst.tmp"
+  cp -a "$src/." "$dst.tmp/"
+  local filter=Catrom
+  is_int "$scale" && filter=Point
+  find "$dst.tmp" -type f \( -name '*.xpm' -o -name '*.png' \) -print0 |
+    xargs -0 -r -P "$(nproc)" -I{} magick {} -filter "$filter" -resize "$tag%" {}
+  echo "$src $(stat -c %Y "$src")" > "$dst.tmp/.chicago-scaled-from"
+  rm -rf "$dst"; mv "$dst.tmp" "$dst"
+  echo "$dst"
+}
+
+set_xsetting() {
+  xfconf-query -c xsettings -p "$1" -s "$3" 2>/dev/null ||
+    xfconf-query -c xsettings -p "$1" -n -t "$2" -s "$3" 2>/dev/null || true
+}
+
+write_prefoverride() {
+  local s="$1" theme_file="$2" out="$ICEWM_DIR/prefoverride" extra="$CONF_DIR/icewm-prefoverride.local"
+  local tb bx by cx cy
+  tb=$(theme_val "$theme_file" TitleBarHeight 18)
+  bx=$(theme_val "$theme_file" BorderSizeX 4); by=$(theme_val "$theme_file" BorderSizeY 4)
+  cx=$(theme_val "$theme_file" CornerSizeX 24); cy=$(theme_val "$theme_file" CornerSizeY 24)
+  {
+    echo "# GENERATED by chicago-display-adapt for scale ${s}x — do not edit."
+    echo "# Put your own overrides in $extra instead."
+    echo "TitleBarHeight=$(mul "$tb" "$s")"
+    echo "BorderSizeX=$(mul "$bx" "$s")"
+    echo "BorderSizeY=$(mul "$by" "$s")"
+    echo "DlgBorderSizeX=$(mul "$bx" "$s")"
+    echo "DlgBorderSizeY=$(mul "$by" "$s")"
+    echo "CornerSizeX=$(mul "$cx" "$s")"
+    echo "CornerSizeY=$(mul "$cy" "$s")"
+    echo "SmallIconSize=$(mul 16 "$s")"
+    echo "LargeIconSize=$(mul 32 "$s")"
+    echo "HugeIconSize=$(mul 48 "$s")"
+    echo "MenuIconSize=$(mul 16 "$s")"
+    echo "ScrollBarX=$(mul 16 "$s")"
+    echo "ScrollBarY=$(mul 16 "$s")"
+    echo "TrayIconMaxWidth=$(mul 20 "$s")"
+    echo "TrayIconMaxHeight=$(mul 20 "$s")"
+    echo "TaskBarGraphHeight=$(mul 20 "$s")"
+    # Point sizes: the Xft.dpi set below already converts these to the
+    # right pixel size. Scaling them here as well is what used to make
+    # text twice too big.
+    local f="$UI_FONT"
+    for k in Title Menu Status QuickSwitch NormalButton NormalTaskBar Clock ToolTip Input Label; do
+      echo "${k}FontNameXft=\"$f:size=10\""
+    done
+    echo "ActiveButtonFontNameXft=\"$f:bold:size=10\""
+    echo "ActiveTaskBarFontNameXft=\"$f:bold:size=10\""
+    # Taskbar. The floating dock (tint2, ~/.config/tint2/tint2rc) replaces
+    # IceWM's edge-to-edge bar when it is installed; otherwise IceWM's bar
+    # is kept but with a plain text clock and no CPU/RAM/network graphs.
+    if command -v tint2 >/dev/null 2>&1; then
+      echo "ShowTaskBar=0"
+    else
+      echo "TaskBarClockLeds=0"
+      echo "TimeFormat=\"%a %-d %b  %H:%M\""
+      echo "TaskBarShowCPUStatus=0"
+      echo "TaskBarShowMEMStatus=0"
+      echo "TaskBarShowNetStatus=0"
+    fi
+    [ -f "$extra" ] && { echo; echo "# --- from $extra ---"; cat "$extra"; }
+  } > "$out.tmp" && mv "$out.tmp" "$out"
+}
+
+# Dock (tint2): same idea. Pixel values and font sizes are multiplied;
+# percentages, colours and ids are left alone.
+write_tint2rc() {
+  local s="$1" base="$HOME/.config/tint2/tint2rc.base" out="$HOME/.config/tint2/tint2rc"
+  [ -f "$base" ] || return 0
+  awk -v s="$s" '
+    function sc(v) { return int(v * s + 0.5) }
+    /^(rounded|border_width|panel_margin|panel_padding|button_padding|button_max_icon_size|launcher_padding|launcher_icon_size|taskbar_padding|task_maximum_size|task_padding|systray_padding|systray_icon_size|clock_padding|tooltip_padding) *=/ {
+      split($0, kv, "="); n = split(kv[2], v, " "); line = kv[1] "="
+      for (i = 1; i <= n; i++) line = line " " sc(v[i])
+      print line; next }
+    /^panel_size *=/ {
+      split($0, kv, "="); n = split(kv[2], v, " ")
+      print kv[1] "= " v[1] " " sc(v[2]); next }
+    /_font *= / && $NF ~ /^[0-9.]+$/ {
+      $NF = sprintf("%.1f", $NF * s); print; next }
+    { print }' "$base" > "$out.tmp" && mv "$out.tmp" "$out"
+}
+
+# Start menu (jgmenu) has fixed pixel sizes: write them for this scale.
+write_jgmenurc() {
+  local s="$1" base="$HOME/.config/jgmenu/jgmenurc.base" out="$HOME/.config/jgmenu/jgmenurc"
+  [ -f "$base" ] || return 0
+  awk -v s="$s" '
+    /^(menu_margin_[xy]|menu_width|menu_padding_[a-z]+|menu_radius|sub_spacing|item_margin_[xy]|item_height|item_padding_x|item_radius|sep_height|icon_size|icon_text_spacing|arrow_width) *=/ {
+      split($0, kv, "="); v = kv[2] + 0
+      printf "%s= %d\n", kv[1], v * s + 0.5; next }
+    { print }' "$base" > "$out.tmp" && mv "$out.tmp" "$out"
+}
+
+apply() {
+  local force="${1:-}" size width scale gdk dpi cursor icon theme dst new_state
+  load_conf
+  size=$(screen_size); [ -n "$size" ] || return 0
+  width=${size%x*}
+  scale=$(pick_scale "$width")
+  new_state="$size $scale $(base_theme) $(stat -c %Y "$CONF")"
+  if [ "$force" != force ] && [ -f "$STATE" ] && [ "$(sed -n 's/^KEY=//p' "$STATE")" = "$new_state" ]; then
+    return 0
+  fi
+
+  # GTK only scales by whole numbers; the remainder goes into the DPI.
+  if awk -v s="$scale" 'BEGIN{exit !(s >= 2)}'; then gdk=${scale%%.*}; else gdk=1; fi
+  dpi=$(mul 96 "$scale")
+  local gtk_dpi; gtk_dpi=$(awk -v s="$scale" -v g="$gdk" 'BEGIN{printf "%d", 96*s/g + 0.5}')
+  cursor=$(mul "$CURSOR" "$scale")
+  # Snap to a size the icon theme actually ships (16/22/24/32/48), so the
+  # retro artwork is never resampled into blur.
+  icon=$(awk -v s="$scale" -v g="$gdk" -v i="$DESKTOP_ICON" 'BEGIN{
+    t = i*s/g; n = split("16 22 24 32 48", z, " "); b = z[1]
+    for (k = 1; k <= n; k++) if (z[k] <= t + 0.5) b = z[k]
+    print b }')
+  log "screen $size -> scale ${scale}x (dpi $dpi, gtk ${gdk}x @ $gtk_dpi, cursor $cursor)"
+
+  # 1. Toolkits.
+  printf 'Xft.dpi: %s\nXcursor.size: %s\nXcursor.theme: Chicago95_Cursor_Black\n' "$dpi" "$cursor" | xrdb -merge
+  set_xsetting /Gdk/WindowScalingFactor int "$gdk"
+  set_xsetting /Xft/DPI int "$gtk_dpi"
+  set_xsetting /Gtk/CursorThemeSize int "$(mul "$CURSOR" "$(awk -v s="$scale" -v g="$gdk" 'BEGIN{print s/g}')")"
+  set_xsetting /Gtk/FontName string "$UI_FONT 10"
+  set_xsetting /Gtk/MonospaceFontName string "$MONO_FONT 10"
+  set_xsetting /Xft/HintStyle string hintslight
+  set_xsetting /Xft/RGBA string none
+  gsettings set org.gnome.desktop.interface font-name "$UI_FONT 10" 2>/dev/null || true
+  gsettings set org.gnome.desktop.interface monospace-font-name "$MONO_FONT 10" 2>/dev/null || true
+  gsettings set org.gnome.desktop.interface cursor-size "$cursor" 2>/dev/null || true
+
+  # 2. IceWM theme pixel-art + metrics.
+  theme=$(base_theme)
+  if [ "$(mul "$scale" 100)" = 100 ]; then
+    printf 'Theme="%s/default.theme"\n' "$theme" > "$ICEWM_DIR/theme"
+  elif dst=$(build_scaled_theme "$theme" "$scale"); then
+    printf 'Theme="%s/default.theme"\n' "$(basename "$dst")" > "$ICEWM_DIR/theme"
+  fi
+  write_prefoverride "$scale" "$(theme_src_dir "$theme")/default.theme"
+  write_jgmenurc "$scale"
+  write_tint2rc "$scale"
+
+  # 3. Desktop icons (pcmanfm reads libfm.conf; restart its desktop).
+  local libfm="$HOME/.config/libfm/libfm.conf"
+  if [ -f "$libfm" ]; then
+    sed -i "s/^big_icon_size=.*/big_icon_size=$icon/" "$libfm"
+  fi
+
+  printf 'KEY=%s\nSCALE=%s\nGDK_SCALE=%s\nDPI=%s\n' "$new_state" "$scale" "$gdk" "$dpi" > "$STATE"
+
+  # 4. Reload the shell pieces (IceWM restarts in place, windows stay).
+  pgrep -u "$USER" -x icewm >/dev/null && icewm -r >/dev/null 2>&1
+  # tint2 reads the DPI only at start-up (a SIGUSR1 reload keeps the old
+  # size), so restart it.
+  if pgrep -u "$USER" -x tint2 >/dev/null; then
+    pkill -u "$USER" -x tint2
+    (sleep 0.5; setsid tint2 >/dev/null 2>&1 9>&- &)
+  fi
+  if pgrep -u "$USER" -f 'pcmanfm --desktop' >/dev/null; then
+    pkill -u "$USER" -f 'pcmanfm --desktop'
+    (sleep 0.5; setsid pcmanfm --desktop --profile=icewm >/dev/null 2>&1 9>&- &)
+  fi
+  return 0
+}
+
+case "${1:-}" in
+  --once)  apply; exit 0 ;;
+  --force) apply force; exit 0 ;;
+esac
+
+# Daemon mode: one instance per session.
+exec 9>"$STATE_DIR/display.lock"
+flock -n 9 || { log "already running"; exit 0; }
+exec >>"$STATE_DIR/display.log" 2>&1
+
+follow_host_size
+apply force
+# Block on RandR events; collapse bursts (a window drag-resize fires many)
+# into one apply once the screen has been stable for ~0.7s.
+xev -root -event randr 2>/dev/null | while read -r line; do
+  case "$line" in
+    RRScreenChangeNotify*|RRNotify*)
+      while read -r -t 0.7 _; do :; done
+      follow_host_size
+      apply ;;
+  esac
+done

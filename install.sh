@@ -130,7 +130,7 @@ sudo apt-get install -y \
   blueman pavucontrol xfce4-power-manager hardinfo2 \
   python3-gi python3-cairo gir1.2-gtk-3.0 \
   imagemagick \
-  xdotool
+  xdotool picom x11-utils tint2 jgmenu fonts-ubuntu fonts-jetbrains-mono
 
 # ---------------------------------------------------------------------------
 # 3. Detect display DPI and pick the matching theme-asset scale
@@ -260,6 +260,41 @@ echo "-- Installing the desktop-icon repaint watcher --"
 track "$HOME/.local/bin/desktop-icon-repaint-watch"
 cp "$REPO_DIR/dotfiles/local/bin/desktop-icon-repaint-watch" "$HOME/.local/bin/desktop-icon-repaint-watch"
 chmod +x "$HOME/.local/bin/desktop-icon-repaint-watch"
+
+# ---------------------------------------------------------------------------
+# 7b2. Display adapter + compositor. chicago-display-adapt runs for the
+#    whole session and re-sizes fonts, window chrome, icons and cursor on
+#    every resolution change (e.g. resizing the VM window). picom adds
+#    shadows/rounded corners with damage tracking so Xorg stays near idle.
+# ---------------------------------------------------------------------------
+echo "-- Installing the display adapter and compositor config --"
+track "$HOME/.local/bin/chicago-display-adapt"
+cp "$REPO_DIR/dotfiles/local/bin/chicago-display-adapt" "$HOME/.local/bin/chicago-display-adapt"
+chmod +x "$HOME/.local/bin/chicago-display-adapt"
+track "$HOME/.local/bin/chicago-app-grid"
+cp "$REPO_DIR/dotfiles/local/bin/chicago-app-grid" "$HOME/.local/bin/chicago-app-grid"
+chmod +x "$HOME/.local/bin/chicago-app-grid"
+mkdir -p "$HOME/.config/picom"
+track "$HOME/.config/picom/picom.conf"
+cp "$REPO_DIR/dotfiles/config/picom/picom.conf" "$HOME/.config/picom/picom.conf"
+
+# Dock (tint2), Start menu (jgmenu), fonts, terminal look, Firefox defaults.
+echo "-- Installing dock, Start menu, fonts and app look --"
+for f in tint2/tint2rc.base jgmenu/jgmenurc.base jgmenu/prepend.csv jgmenu/append.csv \
+         fontconfig/fonts.conf ghostty/config; do
+  mkdir -p "$HOME/.config/$(dirname "$f")"
+  track "$HOME/.config/$f"
+  cp "$REPO_DIR/dotfiles/config/$f" "$HOME/.config/$f"
+done
+mkdir -p "$HOME/.local/share/applications"
+track "$HOME/.local/share/applications/chicago-app-grid.desktop"
+cp "$REPO_DIR/dotfiles/local/share/applications/chicago-app-grid.desktop" "$HOME/.local/share/applications/"
+fc-cache -f >/dev/null 2>&1 || true
+for prof in "$HOME"/snap/firefox/common/.mozilla/firefox/*.default* "$HOME"/.mozilla/firefox/*.default*; do
+  [ -d "$prof" ] || continue
+  track "$prof/user.js"
+  cp "$REPO_DIR/dotfiles/firefox/user.js" "$prof/user.js"
+done
 
 # ---------------------------------------------------------------------------
 # 7c. Chicago95 Control Panel — the single "Settings" entry in the app grid

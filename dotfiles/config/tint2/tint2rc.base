@@ -1,0 +1,279 @@
+#---- Chicago OS dock ------------------------------------------------------
+# A floating XP Luna-style taskbar (blue bar, green start): Start at the
+# left, pinned apps, open windows, tray and clock at the right. It sits
+# 6px above the bottom edge and leaves a margin at each side, and reserves
+# its space so maximized windows stop above it.
+# Sizes here are at 1x. chicago-display-adapt writes ~/.config/tint2/tint2rc
+# from this file, multiplied for the current screen scale (tint2's own DPI
+# scaling needs a physical screen size, which VMs don't report). Edit this
+# file, not tint2rc.
+
+#---- Gradients (XP Luna-style, drawn — no copied artwork) -------------------
+# 1: dock body — deep blue with a bright top edge
+gradient = vertical
+start_color = #3F8CF3 100
+end_color = #1D48B0 100
+color_stop = 4 #5AA0FF 100
+color_stop = 10 #2B6FE3 100
+color_stop = 55 #245EDC 100
+color_stop = 92 #2155CC 100
+
+# 2: Start button — green pill
+gradient = vertical
+start_color = #7ACB72 100
+end_color = #2C7A2C 100
+color_stop = 8 #5DB85A 100
+color_stop = 40 #3C9A3C 100
+color_stop = 88 #348E34 100
+
+# 3: Start hovered
+gradient = vertical
+start_color = #8FDB86 100
+end_color = #338A33 100
+color_stop = 8 #6CC768 100
+color_stop = 40 #46AA46 100
+color_stop = 88 #3C9C3C 100
+
+# 4: window button — raised lighter blue
+gradient = vertical
+start_color = #6AA8FF 100
+end_color = #2A62D8 100
+color_stop = 8 #4D8FF5 100
+color_stop = 50 #3C7EEE 100
+color_stop = 90 #3471E4 100
+
+# 5: window button hovered
+gradient = vertical
+start_color = #84B9FF 100
+end_color = #3A72E6 100
+color_stop = 8 #63A0FA 100
+color_stop = 50 #5090F5 100
+color_stop = 90 #4582EE 100
+
+# 6: focused window — pressed in, darker
+gradient = vertical
+start_color = #133E9A 100
+end_color = #2459C9 100
+color_stop = 10 #1A4AAE 100
+color_stop = 90 #1E52BC 100
+
+# 7: tray / clock well — light blue
+gradient = vertical
+start_color = #3AB0F8 100
+end_color = #0D7FE0 100
+color_stop = 6 #24A2F4 100
+color_stop = 50 #129BF0 100
+color_stop = 92 #0E8BE8 100
+
+#---- Backgrounds ---------------------------------------------------------
+# 1: dock body
+rounded = 9
+border_width = 1
+border_sides = TBLR
+background_color = #245EDC 100
+border_color = #0F3A9E 100
+gradient_id = 1
+background_color_hover = #245EDC 100
+border_color_hover = #0F3A9E 100
+gradient_id_hover = 1
+background_color_pressed = #245EDC 100
+border_color_pressed = #0F3A9E 100
+gradient_id_pressed = 1
+
+# 2: open window
+rounded = 4
+border_width = 1
+border_sides = TBLR
+background_color = #3C7EEE 100
+border_color = #1A4DB8 100
+gradient_id = 4
+background_color_hover = #5090F5 100
+border_color_hover = #1A4DB8 100
+gradient_id_hover = 5
+background_color_pressed = #1E52BC 100
+border_color_pressed = #0F2F7A 100
+gradient_id_pressed = 6
+
+# 3: focused window
+rounded = 4
+border_width = 1
+border_sides = TBLR
+background_color = #1E52BC 100
+border_color = #0F2F7A 100
+gradient_id = 6
+background_color_hover = #1E52BC 100
+border_color_hover = #0F2F7A 100
+gradient_id_hover = 6
+background_color_pressed = #1E52BC 100
+border_color_pressed = #0F2F7A 100
+gradient_id_pressed = 6
+
+# 4: Start button
+rounded = 9
+border_width = 1
+border_sides = TBLR
+background_color = #3C9A3C 100
+border_color = #1F5E1F 100
+gradient_id = 2
+background_color_hover = #46AA46 100
+border_color_hover = #1F5E1F 100
+gradient_id_hover = 3
+background_color_pressed = #2E7D2E 100
+border_color_pressed = #1F5E1F 100
+gradient_id_pressed = 2
+
+# 5: minimized window (flatter)
+rounded = 4
+border_width = 1
+border_sides = TBLR
+background_color = #2B66D9 100
+border_color = #1A4DB8 100
+background_color_hover = #5090F5 100
+border_color_hover = #1A4DB8 100
+gradient_id_hover = 5
+background_color_pressed = #1E52BC 100
+border_color_pressed = #0F2F7A 100
+gradient_id_pressed = 6
+
+# 6: tray / clock well
+rounded = 6
+border_width = 1
+border_sides = TBLR
+background_color = #129BF0 100
+border_color = #0A5BC4 100
+gradient_id = 7
+background_color_hover = #129BF0 100
+border_color_hover = #0A5BC4 100
+gradient_id_hover = 7
+background_color_pressed = #129BF0 100
+border_color_pressed = #0A5BC4 100
+gradient_id_pressed = 7
+
+# 7: tooltip (classic pale yellow)
+rounded = 3
+border_width = 1
+border_sides = TBLR
+background_color = #FFFFE1 100
+border_color = #000000 100
+background_color_hover = #FFFFE1 100
+border_color_hover = #000000 100
+background_color_pressed = #FFFFE1 100
+border_color_pressed = #000000 100
+
+#---- Panel ---------------------------------------------------------------
+panel_items = PLTSC
+panel_size = 96% 38
+panel_margin = 0 6
+panel_padding = 5 5 6
+panel_background_id = 1
+wm_menu = 1
+panel_dock = 0
+panel_position = bottom center horizontal
+panel_layer = top
+panel_monitor = all
+panel_shrink = 0
+autohide = 0
+strut_policy = follow_size
+panel_window_name = chicago-dock
+disable_transparency = 0
+mouse_effects = 1
+font_shadow = 0
+mouse_hover_icon_asb = 100 0 10
+mouse_pressed_icon_asb = 100 0 0
+scale_relative_to_dpi = 0
+scale_relative_to_screen_height = 0
+
+#---- Start button (opens IceWM's Start menu) -------------------------------
+button = new
+button_icon = start-here
+button_text = start
+button_lclick_command = sh -c "command -v jgmenu_run >/dev/null && exec jgmenu_run || exec xdotool key --clearmodifiers ctrl+Escape"
+button_font = Ubuntu Sans Bold Italic 11
+button_font_color = #FFFFFF 100
+button_padding = 10 2 6
+button_background_id = 4
+button_centered = 1
+button_max_icon_size = 18
+button_tooltip = Start menu
+
+#---- Pinned apps ---------------------------------------------------------
+launcher_padding = 6 3 6
+launcher_background_id = 0
+launcher_icon_background_id = 0
+launcher_icon_size = 22
+launcher_icon_asb = 100 0 0
+launcher_icon_theme = Chicago95-tux
+launcher_icon_theme_override = 0
+startup_notifications = 1
+launcher_tooltip = 1
+launcher_item_app = chicago-app-grid.desktop
+launcher_item_app = com.mitchellh.ghostty.desktop
+launcher_item_app = pcmanfm.desktop
+launcher_item_app = firefox_firefox.desktop
+launcher_item_app = chicago95-settings.desktop
+
+#---- Open windows ------------------------------------------------------------
+taskbar_mode = single_desktop
+taskbar_hide_if_empty = 0
+taskbar_padding = 4 0 4
+taskbar_background_id = 0
+taskbar_active_background_id = 0
+taskbar_name = 0
+taskbar_hide_inactive_tasks = 0
+taskbar_hide_different_monitor = 0
+taskbar_always_show_all_desktop_tasks = 0
+taskbar_distribute_size = 1
+taskbar_sort_order = none
+task_align = left
+task_text = 1
+task_icon = 1
+task_centered = 0
+urgent_nb_of_blink = 8
+task_maximum_size = 180 28
+task_padding = 6 2 5
+task_tooltip = 1
+task_thumbnail = 0
+task_font = Ubuntu Sans 10
+task_font_color = #FFFFFF 100
+task_active_font_color = #FFFFFF 100
+task_iconified_font_color = #D6E4FF 100
+task_icon_asb = 100 0 0
+task_iconified_icon_asb = 70 0 0
+task_background_id = 2
+task_active_background_id = 3
+task_urgent_background_id = 3
+task_iconified_background_id = 5
+mouse_left = toggle_iconify
+mouse_middle = close
+mouse_right = none
+mouse_scroll_up = prev_task
+mouse_scroll_down = next_task
+
+#---- Tray ----------------------------------------------------------------
+systray_padding = 6 3 6
+systray_background_id = 6
+systray_sort = ascending
+systray_icon_size = 18
+systray_icon_asb = 100 0 0
+systray_monitor = primary
+systray_name_filter =
+
+#---- Clock (no LED digits: plain, readable, macOS-style) ---------------------
+time1_format = %a %-d %b   %H:%M
+time1_font = Ubuntu Sans 10
+time2_format =
+clock_font_color = #FFFFFF 100
+clock_padding = 10 3
+clock_background_id = 6
+clock_tooltip = %A, %-d %B %Y
+clock_tooltip_timezone =
+clock_lclick_command = yad --calendar --undecorated --mouse --close-on-unfocus --no-buttons --title=Calendar
+clock_rclick_command =
+
+#---- Tooltips --------------------------------------------------------------
+tooltip_show_timeout = 0.4
+tooltip_hide_timeout = 0.1
+tooltip_padding = 8 5
+tooltip_background_id = 7
+tooltip_font_color = #000000 100
+tooltip_font = Ubuntu Sans 10

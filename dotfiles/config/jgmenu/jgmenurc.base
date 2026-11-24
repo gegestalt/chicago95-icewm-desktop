@@ -1,0 +1,47 @@
+# Chicago OS Start menu (jgmenu). Sizes here are at 1x scale:
+# chicago-display-adapt writes ~/.config/jgmenu/jgmenurc from this file,
+# multiplied for the current screen scale. Edit this file, not jgmenurc.
+# Type while the menu is open to search all apps.
+csv_cmd = apps
+csv_no_duplicates = 1
+stay_alive = 0
+tint2_look = 0
+position_mode = fixed
+menu_halign = left
+menu_valign = bottom
+menu_margin_x = 24
+menu_margin_y = 54
+menu_width = 250
+menu_padding_top = 8
+menu_padding_right = 6
+menu_padding_bottom = 8
+menu_padding_left = 6
+menu_radius = 12
+menu_border = 1
+sub_spacing = 4
+item_margin_x = 2
+item_margin_y = 1
+item_height = 30
+item_padding_x = 8
+item_radius = 7
+item_border = 0
+sep_height = 9
+icon_size = 22
+icon_text_spacing = 10
+arrow_width = 14
+font = Ubuntu Sans 10
+icon_theme = Chicago95-tux
+icon_theme_fallback = hicolor
+arrow_string = ›
+color_menu_bg = #D4D0C8 98
+color_menu_border = #808080 100
+color_norm_bg = #000000 0
+color_norm_fg = #202630 100
+color_sel_bg = #245EDC 100
+color_sel_fg = #FFFFFF 100
+color_sel_border = #245EDC 100
+color_sep_fg = #9C9890 100
+color_title_fg = #5A5F68 100
+color_title_bg = #000000 0
+color_title_border = #000000 0
+color_scroll_ind = #808080 100

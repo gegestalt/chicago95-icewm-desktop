@@ -1,0 +1,67 @@
+# Chicago OS — Ghostty
+# "Chicago Night": a deep teal-black terminal that belongs to the teal
+# desktop instead of a stock dark theme. Accents come from the desktop's
+# own palette: teal (#008080 family), XP blue, and the red/amber/green of
+# the window buttons.
+
+# --- Window ---------------------------------------------------------------
+# Use the desktop's themed frame (same title bar and buttons as every other
+# window) instead of Ghostty's own GNOME-style header bar.
+window-decoration = server
+gtk-titlebar = false
+window-theme = dark
+gtk-tabs-location = top
+window-padding-x = 12
+window-padding-y = 10
+window-padding-balance = true
+window-padding-color = extend
+resize-overlay = never
+window-step-resize = false
+window-inherit-working-directory = true
+confirm-close-surface = false
+gtk-single-instance = false
+
+# The in-window "Copied to clipboard" toast is a GNOME widget that ignores
+# the desktop theme. Off; config-reload notices stay.
+app-notifications = no-clipboard-copy,config-reload
+
+# --- Type -------------------------------------------------------------------
+font-family = JetBrains Mono
+font-size = 10.5
+font-feature = -liga
+adjust-cell-height = 2
+bold-is-bright = false
+
+# --- Cursor & input ---------------------------------------------------------
+cursor-style = bar
+cursor-style-blink = true
+mouse-hide-while-typing = true
+shell-integration = bash
+shell-integration-features = cursor,sudo,title
+
+# --- Colours: Chicago Night ---------------------------------------------------
+background = #0b1a1c
+foreground = #d6e4e1
+cursor-color = #2fd3c4
+cursor-text = #0b1a1c
+selection-background = #1f4f57
+selection-foreground = #eaf6f4
+unfocused-split-opacity = 0.85
+split-divider-color = #2fd3c4
+
+palette = 0=#13262a
+palette = 1=#ff605c
+palette = 2=#3ddc84
+palette = 3=#ffbd44
+palette = 4=#4d8dff
+palette = 5=#c792ea
+palette = 6=#2fd3c4
+palette = 7=#c8d6d3
+palette = 8=#4a6266
+palette = 9=#ff8a85
+palette = 10=#6bf0a6
+palette = 11=#ffd580
+palette = 12=#7aaeff
+palette = 13=#ddb3ff
+palette = 14=#6ff2e5
+palette = 15=#f2faf8

@@ -1,0 +1,6 @@
+#!/bin/sh
+# Opens the flat "Applications" grid (~/Applications, kept in sync by
+# build-app-grid). A script so desktop entries and the dock can launch it
+# without shell quoting inside Exec=.
+[ -d "$HOME/Applications" ] || "$HOME/.local/bin/build-app-grid"
+exec pcmanfm "$HOME/Applications"

@@ -230,3 +230,24 @@ system/                           lightdm + xsessions entries (sudo-installed)
 
 MIT for everything in this repo. Chicago95 itself is a separate project —
 see its own repo for its license.
+
+## Chicago OS layer
+
+On top of the IceWM/Chicago95 base:
+
+- **Floating XP-style dock** (tint2): blue bar, green start button, pinned apps,
+  open windows, tray and a plain text clock, sitting above the screen edge.
+  Config: `~/.config/tint2/tint2rc.base`.
+- **Start menu** (jgmenu): opens above the start button, type to search.
+  Config: `~/.config/jgmenu/`.
+- **`chicago-display-adapt`**: follows the VM window size and rescales fonts,
+  window frames, desktop icons, cursor, dock and menu on every change.
+  Settings: `~/.config/chicago-os/display.conf` (`SCALE=auto` or a fixed value,
+  `TARGET_WIDTH`, `DESKTOP_ICON`, fonts). In VMware Fusion, enable
+  "Use full resolution for Retina display" for sharp text.
+- **Low-CPU compositor** (picom with damage tracking), Ubuntu Sans / JetBrains
+  Mono everywhere, a "Chicago Night" Ghostty theme in the themed window frame,
+  matching notifications, and Firefox using the system frame.
+- **`system-setup.sh`**: the sudo-only steps (US keyboard, Ghostty as default
+  terminal, developer tools, switching off unneeded services). Run once in a
+  terminal.

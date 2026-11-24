@@ -41,6 +41,11 @@ command -v python3 >/dev/null 2>&1 && "$HOME/.local/bin/keyboard-layout-picker" 
 # their very first frame instead of a fresh login briefly looking wrong.
 xfsettingsd &
 
+# Floating dock (Start, pinned apps, open windows, tray, clock). When tint2
+# is installed, chicago-display-adapt hides IceWM's own edge-to-edge
+# taskbar (ShowTaskBar=0); without tint2, IceWM's taskbar stays as before.
+command -v tint2 >/dev/null 2>&1 && { pgrep -u "$USER" -x tint2 >/dev/null || tint2 & }
+
 # Power-management daemon backing the Control Panel's "Power" entry
 # (xfce4-power-manager-settings) — without it running, that settings
 # dialog just prompts "Xfce4 Power Manager is not running" instead of
@@ -66,5 +71,14 @@ nm-applet &
 
 # VMware host/guest clipboard and drag/drop (no-op outside a VMware VM).
 [ -x /usr/bin/vmware-user ] && /usr/bin/vmware-user >/tmp/vmware-user.log 2>&1 &
+
+# Compositor (soft shadows, rounded corners). Tuned for low CPU: see
+# ~/.config/picom/picom.conf.
+command -v picom >/dev/null 2>&1 && { pgrep -u "$USER" -x picom >/dev/null || picom --config "$HOME/.config/picom/picom.conf" -b; }
+
+# Keeps fonts, window chrome, icons and cursor at the right size for the
+# current resolution and re-applies on every resize of the VM window.
+# Settings: ~/.config/chicago-os/display.conf
+command -v xev >/dev/null 2>&1 && "$HOME/.local/bin/chicago-display-adapt" &
 
 exit 0

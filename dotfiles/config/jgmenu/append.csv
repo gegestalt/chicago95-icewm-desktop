@@ -1,0 +1,6 @@
+^sep()
+Control Panel,chicago95-settings,preferences-system
+^sep()
+Log Out…,icesh logout,system-log-out
+Restart…,icesh reboot,system-reboot
+Shut Down…,icesh shutdown,system-shutdown
