@@ -350,6 +350,12 @@ apply() {
     return 0
   fi
 
+  # Firefox: interface scale = desktop scale (see dotfiles/firefox/user.js).
+  local prof
+  for prof in "$HOME"/snap/firefox/common/.mozilla/firefox/*/user.js "$HOME"/.mozilla/firefox/*/user.js; do
+    [ -f "$prof" ] && sed -i "s/^user_pref(\"layout.css.devPixelsPerPx\", \"[^\"]*\");/user_pref(\"layout.css.devPixelsPerPx\", \"$scale\");/" "$prof"
+  done
+
   # 4. Reload the shell pieces (IceWM restarts in place, windows stay).
   # Restarted helpers get the session's theme environment explicitly, so
   # running this from a terminal can't hand them that terminal's settings

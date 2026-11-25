@@ -6,8 +6,15 @@
 // drawing its own GNOME/Windows-style title bar with the tabs.
 user_pref("browser.tabs.inTitlebar", 0);
 
-// Follow the system scale set by chicago-display-adapt (no own zoom).
-user_pref("layout.css.devPixelsPerPx", "-1.0");
+// Interface scale = the desktop scale. chicago-display-adapt rewrites
+// this line in every profile when the scale changes (applies at the next
+// Firefox start). "-1.0" would follow the DPI instead, which includes
+// TEXT_SCALE and made the toolbars oversized.
+user_pref("layout.css.devPixelsPerPx", "2.0");
+
+// Compact toolbars and tabs: slimmer rows, same layout.
+user_pref("browser.compactmode.show", true);
+user_pref("browser.uidensity", 1);
 
 // Same type as the rest of the desktop.
 user_pref("font.name.sans-serif.x-western", "Ubuntu Sans");
