@@ -36,7 +36,7 @@ icon_text_spacing = 12
 arrow_width = 16
 arrow_string = ▸
 
-font = Ubuntu Sans 11
+font = Ubuntu Sans 12
 icon_theme = Chicago95-tux
 icon_theme_fallback = hicolor
 
