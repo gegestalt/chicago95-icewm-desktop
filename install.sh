@@ -200,6 +200,11 @@ cp "$REPO_DIR/dotfiles/icewm/prefoverride-$SCALE" "$HOME/.icewm/prefoverride"
 track "$HOME/.icewm/themes/Chicago"
 rm -rf "$HOME/.icewm/themes/Chicago"
 cp -a "$REPO_DIR/dotfiles/icewm/themes-$SCALE/Chicago" "$HOME/.icewm/themes/Chicago"
+# Default window theme (round red/amber/green buttons). Scaled copies for
+# HiDPI are made at login by chicago-display-adapt.
+track "$HOME/.icewm/themes/ChicagoModernXP"
+rm -rf "$HOME/.icewm/themes/ChicagoModernXP"
+cp -a "$REPO_DIR/dotfiles/icewm/themes-modern/ChicagoModernXP" "$HOME/.icewm/themes/ChicagoModernXP"
 chmod +x "$HOME/.icewm/startup"
 
 # Fill in the real home directory (IceWM config files don't expand $HOME).
