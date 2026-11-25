@@ -242,10 +242,19 @@ write_tint2rc() {
 write_jgmenurc() {
   local s="$1" base="$HOME/.config/jgmenu/jgmenurc.base" out="$HOME/.config/jgmenu/jgmenurc"
   [ -f "$base" ] || return 0
-  awk -v s="$s" '
-    /^(menu_margin_[xy]|menu_width|menu_padding_[a-z]+|menu_radius|sub_spacing|item_margin_[xy]|item_height|item_padding_x|item_radius|sep_height|icon_size|icon_text_spacing|arrow_width) *=/ {
+  # jgmenu ignores the DPI, so pixel sizes follow the screen scale and
+  # font sizes follow screen scale x TEXT_SCALE, like every other app.
+  awk -v s="$s" -v t="${TEXT_SCALE:-1}" -v home="$HOME" '
+    /^csv_cmd *=/ { sub(/~\//, home "/"); print; next }
+    /^(menu_margin_[xy]|menu_width|menu_padding_[a-z]+|menu_radius|menu_border|sub_spacing|item_margin_[xy]|item_height|item_padding_x|item_radius|sep_height|icon_size|icon_text_spacing|arrow_width) *=/ {
       split($0, kv, "="); v = kv[2] + 0
       printf "%s= %d\n", kv[1], v * s + 0.5; next }
+    /^font *=/ {
+      n = split($0, w, " "); w[n] = sprintf("%d", w[n] * s * t + 0.5)
+      line = w[1]; for (i = 2; i <= n; i++) line = line " " w[i]; print line; next }
+    /^sep_markup *=/ && match($0, /[0-9]+"/) {
+      v = substr($0, RSTART, RLENGTH - 1)
+      print substr($0, 1, RSTART - 1) sprintf("%d", v * s * t + 0.5) substr($0, RSTART + RLENGTH - 1); next }
     { print }' "$base" > "$out.tmp" && mv "$out.tmp" "$out"
 }
 

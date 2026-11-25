@@ -314,13 +314,16 @@ chmod +x "$HOME/.local/bin/chicago-display-adapt"
 track "$HOME/.local/bin/chicago-app-grid"
 cp "$REPO_DIR/dotfiles/local/bin/chicago-app-grid" "$HOME/.local/bin/chicago-app-grid"
 chmod +x "$HOME/.local/bin/chicago-app-grid"
+track "$HOME/.local/bin/chicago-start-menu"
+cp "$REPO_DIR/dotfiles/local/bin/chicago-start-menu" "$HOME/.local/bin/chicago-start-menu"
+chmod +x "$HOME/.local/bin/chicago-start-menu"
 mkdir -p "$HOME/.config/picom"
 track "$HOME/.config/picom/picom.conf"
 cp "$REPO_DIR/dotfiles/config/picom/picom.conf" "$HOME/.config/picom/picom.conf"
 
 # Dock (tint2), Start menu (jgmenu), fonts, terminal look, Firefox defaults.
 echo "-- Installing dock, Start menu, fonts and app look --"
-for f in tint2/tint2rc.base jgmenu/jgmenurc.base jgmenu/prepend.csv jgmenu/append.csv \
+for f in tint2/tint2rc.base jgmenu/jgmenurc.base jgmenu/start-pinned.csv jgmenu/start-footer.csv \
          fontconfig/fonts.conf ghostty/config; do
   mkdir -p "$HOME/.config/$(dirname "$f")"
   track "$HOME/.config/$f"

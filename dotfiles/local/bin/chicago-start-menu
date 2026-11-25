@@ -1,0 +1,18 @@
+#!/bin/sh
+# chicago-start-menu — builds the Start menu for jgmenu (csv_cmd), laid
+# out like the Windows XP one:
+#   blue header with your name
+#   pinned apps                  ~/.config/jgmenu/start-pinned.csv
+#   All Programs ▸               every installed app, by category
+#   Control Panel, Log Off, Restart, Turn Off   start-footer.csv
+dir="$HOME/.config/jgmenu"
+name=$(getent passwd "$USER" | cut -d: -f5 | cut -d, -f1)
+printf '^sep(%s)\n' "${name:-$USER}"
+cat "$dir/start-pinned.csv" 2>/dev/null
+printf '^sep()\nAll Programs,^checkout(allprogs),applications-other\n^sep()\n'
+cat "$dir/start-footer.csv" 2>/dev/null
+# Categories under "All Programs"; each category's own submenu follows.
+apps=$(jgmenu_run apps 2>/dev/null)
+printf '^tag(allprogs)\n'
+printf '%s\n' "$apps" | grep '\^checkout(apps-dir-'
+printf '%s\n' "$apps" | sed -n '/^\^tag(/,$p'
