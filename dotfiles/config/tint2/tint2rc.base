@@ -161,7 +161,7 @@ background_color_pressed = #FFFFE1 100
 border_color_pressed = #000000 100
 
 #---- Panel ---------------------------------------------------------------
-panel_items = PLTSEC
+panel_items = PLTSC
 panel_size = 100% 38
 panel_margin = 0 0
 panel_padding = 8 5 6
@@ -272,22 +272,6 @@ clock_tooltip = %A, %-d %B %Y
 clock_tooltip_timezone =
 clock_lclick_command = yad --calendar --undecorated --mouse --close-on-unfocus --no-buttons --title=Calendar
 clock_rclick_command =
-
-#---- Battery: the Mac's, published by host/macos/install-battery-feed.sh
-#     (Fusion gives ARM Linux guests no virtual battery). Hidden when
-#     there's no fresh value. -----------------------------------------------
-execp = new
-execp_command = $HOME/.local/bin/chicago-battery
-execp_interval = 30
-execp_has_icon = 0
-execp_continuous = 0
-execp_markup = 0
-execp_tooltip = Battery
-execp_font = Ubuntu Sans 10
-execp_font_color = #FFFFFF 100
-execp_padding = 10 3
-execp_background_id = 6
-execp_centered = 1
 
 #---- Tooltips --------------------------------------------------------------
 tooltip_show_timeout = 0.4
