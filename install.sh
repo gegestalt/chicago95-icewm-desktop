@@ -246,6 +246,7 @@ cfg.update({
     "editor.fontFamily": "'JetBrains Mono', monospace",
     "terminal.integrated.fontFamily": "'JetBrains Mono'",
     "terminal.external.linuxExec": "ghostty",
+    "workbench.colorTheme": "Default Dark Modern",
 })
 open(p, "w").write(json.dumps(cfg, indent=4) + "\n")
 PY

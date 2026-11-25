@@ -1,1 +1,5 @@
+golang.go
+ms-azuretools.vscode-containers
 ms-vscode.cpptools-themes
+oderwat.indent-rainbow
+pkief.material-icon-theme
