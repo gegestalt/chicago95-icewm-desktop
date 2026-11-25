@@ -1,0 +1,15 @@
+#!/bin/sh
+# chicago-desktop-layout — keeps the desktop icons in one tidy, fixed
+# grid. pcmanfm saves each icon's position in device pixels, so after a
+# scale change (or a stray drag) icons ended up unevenly spaced. Run at
+# login before pcmanfm starts: drops saved positions and sorts by name,
+# so pcmanfm lays the icons out in the same column every time.
+conf="$HOME/.config/pcmanfm/icewm/desktop-items-0.conf"
+mkdir -p "$(dirname "$conf")"
+[ -f "$conf" ] || printf '[*]\n' > "$conf"
+awk '
+  /^\[/ { keep = ($0 == "[*]") }
+  keep && /^sort=/ { print "sort=name;ascending;mingle;"; sorted = 1; next }
+  keep { print }
+  END { if (!sorted) print "sort=name;ascending;mingle;" }
+' "$conf" > "$conf.tmp" && mv "$conf.tmp" "$conf"

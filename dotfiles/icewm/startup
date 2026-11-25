@@ -56,6 +56,8 @@ command -v xfce4-power-manager >/dev/null 2>&1 && xfce4-power-manager &
 "$HOME/.local/bin/build-app-grid" &
 
 # Desktop icons / file manager.
+# Same tidy icon grid every login (see chicago-desktop-layout).
+[ -x "$HOME/.local/bin/chicago-desktop-layout" ] && "$HOME/.local/bin/chicago-desktop-layout"
 pcmanfm --desktop --profile=icewm &
 
 # Works around a pcmanfm bug (issue #19): a dragged desktop icon doesn't
