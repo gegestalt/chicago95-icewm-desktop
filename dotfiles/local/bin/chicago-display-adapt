@@ -203,6 +203,11 @@ write_prefoverride() {
     # frame corner pixmaps (see tools/round-frame-corners); let that shape
     # also clip the app's own corner so the outline is round, not notched.
     echo 'ShapesProtectClientWindow=0'
+    # Windows can't be dragged under the dock or off the screen: the edge
+    # of the work area (screen minus the dock's strut) is a hard wall.
+    echo 'EdgeResistance=10000'
+    echo 'LimitPosition=1'
+    echo 'LimitSize=1'
     # Taskbar. The floating dock (tint2, ~/.config/tint2/tint2rc) replaces
     # IceWM's edge-to-edge bar when it is installed; otherwise IceWM's bar
     # is kept but with a plain text clock and no CPU/RAM/network graphs.
