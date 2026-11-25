@@ -37,8 +37,6 @@ arrow_width = 16
 arrow_string = ▸
 
 font = Ubuntu Sans 11
-# Header (the ^sep(name) line): bold white on XP blue.
-sep_markup = font="Ubuntu Sans Bold 13" foreground="#FFFFFF"
 icon_theme = Chicago95-tux
 icon_theme_fallback = hicolor
 
