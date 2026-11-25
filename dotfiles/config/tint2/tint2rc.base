@@ -212,7 +212,7 @@ launcher_tooltip = 1
 launcher_item_app = chicago-app-grid.desktop
 launcher_item_app = com.mitchellh.ghostty.desktop
 launcher_item_app = pcmanfm.desktop
-launcher_item_app = firefox_firefox.desktop
+launcher_item_app = firefox.desktop
 launcher_item_app = chicago95-settings.desktop
 
 #---- Open windows ------------------------------------------------------------

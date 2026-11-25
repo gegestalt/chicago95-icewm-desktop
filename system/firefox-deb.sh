@@ -34,9 +34,18 @@ if [ -n "$profile" ] && [ -d "$SNAP_ROOT/$profile" ] && [ ! -d "$DEB_ROOT/$profi
   echo "-- Moving the Firefox profile ($profile) out of the snap --"
   mkdir -p "$DEB_ROOT"
   cp -a "$SNAP_ROOT/$profile" "$DEB_ROOT/$profile"
-  # Fresh profiles.ini without the snap's [Install...] lock, so the .deb
-  # adopts this profile instead of creating an empty one.
+  rm -f "$DEB_ROOT/$profile/lock" "$DEB_ROOT/$profile/.parentlock"
+  # Firefox only adopts an existing profile when profiles.ini/installs.ini
+  # assign it to this installation; otherwise it creates an empty
+  # "default-release" one. The key is a hash of the install directory,
+  # fixed for Mozilla's .deb (/usr/lib/firefox).
+  hash=4F96D1932A9F858E
+  printf '[%s]\nDefault=%s\nLocked=1\n\n' "$hash" "$profile" > "$DEB_ROOT/installs.ini"
   cat > "$DEB_ROOT/profiles.ini" <<EOF
+[Install$hash]
+Default=$profile
+Locked=1
+
 [Profile0]
 Name=default
 IsRelative=1

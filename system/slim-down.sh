@@ -174,5 +174,8 @@ command -v snap >/dev/null && snap list --all 2>/dev/null | awk '/disabled/ { pr
   sudo snap remove "$name" --revision="$rev" || true
 done
 sudo apt-get clean
+# Forget timers/services of removed packages (else "failed" until reboot).
+sudo systemctl daemon-reload
+sudo systemctl reset-failed
 sudo journalctl --vacuum-size=50M >/dev/null 2>&1 || true
 echo "-- Slim-down done: $(df -h / | awk 'NR==2 { print $3 " used, " $4 " free" }') --"

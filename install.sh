@@ -363,6 +363,13 @@ if command -v firefox >/dev/null 2>&1 \
   echo "-- Creating the Firefox profile --"
   (cd /tmp && timeout 60 firefox --headless --screenshot about:blank >/dev/null 2>&1) || true
 fi
+# The theme's plain "firefox" icon is a ship's wheel; firefox_2 is its
+# retro rendition of the real fox logo (dock, Start menu, app grid).
+if [ -f /usr/share/applications/firefox.desktop ]; then
+  track "$HOME/.local/share/applications/firefox.desktop"
+  sed 's/^Icon=.*/Icon=firefox_2/' /usr/share/applications/firefox.desktop \
+    > "$HOME/.local/share/applications/firefox.desktop"
+fi
 for prof in "$HOME"/snap/firefox/common/.mozilla/firefox/*.default* "$HOME"/.mozilla/firefox/*.default*; do
   [ -d "$prof" ] || continue
   track "$prof/user.js"
