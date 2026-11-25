@@ -51,8 +51,8 @@ DESKTOP_ICON=32
 CURSOR=24
 # 1 = resize the desktop to the VM window whenever the host changes it
 FOLLOW_HOST=1
-# Text size for every app (1 = 96 dpi). 1.5 matches the terminal's text.
-TEXT_SCALE=1.5
+# Text size for every app (1 = 96 dpi). 1.1 = a little larger than macOS default.
+TEXT_SCALE=1.1
 # auto = smooth rounded corners + shadows (picom) only when 3D acceleration
 # is on; 1 = always, 0 = never. Read at login.
 COMPOSITOR=auto
@@ -63,7 +63,7 @@ EOF
 log() { printf '%s %s\n' "$(date '+%F %T')" "$*" >&2; }
 
 load_conf() {
-  SCALE=auto TARGET_WIDTH=1440 DESKTOP_ICON=32 CURSOR=24 FOLLOW_HOST=1 TEXT_SCALE=1.5
+  SCALE=auto TARGET_WIDTH=1440 DESKTOP_ICON=32 CURSOR=24 FOLLOW_HOST=1 TEXT_SCALE=1.1
   UI_FONT='Ubuntu Sans' MONO_FONT='JetBrains Mono'
   # shellcheck disable=SC1090
   . "$CONF"
@@ -190,16 +190,12 @@ write_prefoverride() {
     # Point sizes: the Xft.dpi set below already converts these to the
     # right pixel size. Scaling them here as well is what used to make
     # text twice too big.
-    # Window-chrome text (title bars, IceWM menus) is held at a fixed
-    # size, ~10.5pt at 96 dpi, whatever TEXT_SCALE is, so a title still
-    # fits its pixel-art title bar.
-    local f="$UI_FONT" pt
-    pt=$(awk -v t="${TEXT_SCALE:-1}" 'BEGIN{printf "%.1f", 10.5/t}')
+    local f="$UI_FONT"
     for k in Title Menu Status QuickSwitch NormalButton NormalTaskBar Clock ToolTip Input Label; do
-      echo "${k}FontNameXft=\"$f:size=$pt\""
+      echo "${k}FontNameXft=\"$f:size=10\""
     done
-    echo "ActiveButtonFontNameXft=\"$f:bold:size=$pt\""
-    echo "ActiveTaskBarFontNameXft=\"$f:bold:size=$pt\""
+    echo "ActiveButtonFontNameXft=\"$f:bold:size=10\""
+    echo "ActiveTaskBarFontNameXft=\"$f:bold:size=10\""
     # Window buttons on the left, macOS order: close, minimize, maximize.
     echo 'TitleButtonsLeft="xim"'
     echo 'TitleButtonsRight=""'
