@@ -22,7 +22,8 @@
 #      place (windows stay open).
 #
 # Config: ~/.config/chicago-os/display.conf
-#   SCALE=auto           # or 1, 1.25, 1.5, 1.75, 2, 2.5, 3
+#   SCALE=auto           # or 1, 1.25, 1.5, 1.75, 2, 2.5, 3. With Retina
+#                        # full resolution on a Mac, 2 is right everywhere.
 #   TARGET_WIDTH=1440    # auto mode: largest scale that still leaves at
 #                        # least this many logical pixels across (macOS's
 #                        # "looks like" sizes land in 1440-1728)
@@ -100,6 +101,15 @@ follow_host_size() {
 pick_scale() {
   local width="$1"
   if [ "$SCALE" != auto ]; then echo "$SCALE"; return; fi
+  # Sticky: resizing or moving the VM window doesn't change the pixel
+  # density, so keep the current scale while the desktop stays a sensible
+  # size (1024-2400 logical px wide). Re-guessing from every new width
+  # flipped between 1.25x and 2.5x and reloaded the desktop each time.
+  local cur
+  cur=$(sed -n 's/^SCALE=//p' "$STATE" 2>/dev/null)
+  if [ -n "$cur" ] && awk -v w="$width" -v s="$cur" 'BEGIN{exit !(w/s >= 1024 && w/s <= 2400)}'; then
+    echo "$cur"; return
+  fi
   for s in 3 2.5 2 1.75 1.5 1.25; do
     if awk -v w="$width" -v s="$s" -v t="$TARGET_WIDTH" 'BEGIN{exit !(w/s >= t)}'; then
       echo "$s"; return
