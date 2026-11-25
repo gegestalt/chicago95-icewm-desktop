@@ -21,6 +21,6 @@ else
 fi
 
 case "$state" in
-  charging|finishing*|charged|AC*) echo "MAC ⚡ $pct%" ;;
-  *) echo "MAC $pct%" ;;
+  charging|finishing*|charged|AC*) echo "⚡ $pct%" ;;
+  *) echo "$pct%" ;;
 esac
