@@ -51,6 +51,8 @@ DESKTOP_ICON=32
 CURSOR=24
 # 1 = resize the desktop to the VM window whenever the host changes it
 FOLLOW_HOST=1
+# Text size for every app (1 = 96 dpi). 1.1 = a little larger than macOS default.
+TEXT_SCALE=1.1
 # auto = smooth rounded corners + shadows (picom) only when 3D acceleration
 # is on; 1 = always, 0 = never. Read at login.
 COMPOSITOR=auto
@@ -61,7 +63,7 @@ EOF
 log() { printf '%s %s\n' "$(date '+%F %T')" "$*" >&2; }
 
 load_conf() {
-  SCALE=auto TARGET_WIDTH=1440 DESKTOP_ICON=32 CURSOR=24 FOLLOW_HOST=1
+  SCALE=auto TARGET_WIDTH=1440 DESKTOP_ICON=32 CURSOR=24 FOLLOW_HOST=1 TEXT_SCALE=1.1
   UI_FONT='Ubuntu Sans' MONO_FONT='JetBrains Mono'
   # shellcheck disable=SC1090
   . "$CONF"
@@ -263,8 +265,10 @@ apply() {
 
   # GTK only scales by whole numbers; the remainder goes into the DPI.
   if awk -v s="$scale" 'BEGIN{exit !(s >= 2)}'; then gdk=${scale%%.*}; else gdk=1; fi
-  dpi=$(mul 96 "$scale")
-  local gtk_dpi; gtk_dpi=$(awk -v s="$scale" -v g="$gdk" 'BEGIN{printf "%d", 96*s/g + 0.5}')
+  # TEXT_SCALE enlarges text (and Firefox/VS Code, which follow the DPI)
+  # without touching the pixel-art window chrome.
+  dpi=$(awk -v s="$scale" -v t="$TEXT_SCALE" 'BEGIN{printf "%d", 96*s*t + 0.5}')
+  local gtk_dpi; gtk_dpi=$(awk -v s="$scale" -v g="$gdk" -v t="$TEXT_SCALE" 'BEGIN{printf "%d", 96*s*t/g + 0.5}')
   cursor=$(mul "$CURSOR" "$scale")
   # Snap to a size the icon theme actually ships (16/22/24/32/48), so the
   # retro artwork is never resampled into blur.
@@ -275,7 +279,6 @@ apply() {
   log "screen $size -> scale ${scale}x (dpi $dpi, gtk ${gdk}x @ $gtk_dpi, cursor $cursor)"
 
   # 1. Toolkits.
-  printf 'Xft.dpi: %s\nXcursor.size: %s\nXcursor.theme: Chicago95_Cursor_Black\n' "$dpi" "$cursor" | xrdb -merge
   set_xsetting /Gdk/WindowScalingFactor int "$gdk"
   set_xsetting /Xft/DPI int "$gtk_dpi"
   set_xsetting /Gtk/CursorThemeSize int "$(mul "$CURSOR" "$(awk -v s="$scale" -v g="$gdk" 'BEGIN{print s/g}')")"
@@ -286,6 +289,13 @@ apply() {
   gsettings set org.gnome.desktop.interface font-name "$UI_FONT 10" 2>/dev/null || true
   gsettings set org.gnome.desktop.interface monospace-font-name "$MONO_FONT 10" 2>/dev/null || true
   gsettings set org.gnome.desktop.interface cursor-size "$cursor" 2>/dev/null || true
+  # Xft.dpi (read directly by IceWM, Firefox, VS Code/Electron, Qt) is the
+  # FULL dpi. xfsettingsd copies its own /Xft/DPI into this resource
+  # whenever that changes, and at 2x and up that value is the GTK
+  # (unscaled) dpi, i.e. half: those apps then drew tiny text. So write
+  # it after xfsettingsd has handled the change above.
+  sleep 0.5
+  printf 'Xft.dpi: %s\nXcursor.size: %s\nXcursor.theme: Chicago95_Cursor_Black\n' "$dpi" "$cursor" | xrdb -merge
 
   # 2. IceWM theme pixel-art + metrics.
   theme=$(base_theme)
@@ -317,16 +327,20 @@ apply() {
   fi
 
   # 4. Reload the shell pieces (IceWM restarts in place, windows stay).
+  # Restarted helpers get the session's theme environment explicitly, so
+  # running this from a terminal can't hand them that terminal's settings
+  # (a leaked GTK_THEME=Adwaita:dark once made the desktop menu dark).
+  set -- env -u FONTCONFIG_FILE -u GDK_SCALE -u GDK_DPI_SCALE GTK_THEME=Chicago95
   pgrep -u "$USER" -x icewm >/dev/null && icewm -r >/dev/null 2>&1
   # tint2 reads the DPI only at start-up (a SIGUSR1 reload keeps the old
   # size), so restart it.
   if pgrep -u "$USER" -x tint2 >/dev/null; then
     pkill -u "$USER" -x tint2
-    (sleep 0.5; setsid tint2 >/dev/null 2>&1 9>&- &)
+    (sleep 0.5; setsid "$@" tint2 >/dev/null 2>&1 9>&- &)
   fi
   if pgrep -u "$USER" -f 'pcmanfm --desktop' >/dev/null; then
     pkill -u "$USER" -f 'pcmanfm --desktop'
-    (sleep 0.5; setsid pcmanfm --desktop --profile=icewm >/dev/null 2>&1 9>&- &)
+    (sleep 0.5; setsid "$@" pcmanfm --desktop --profile=icewm >/dev/null 2>&1 9>&- &)
   fi
   return 0
 }

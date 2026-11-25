@@ -1,0 +1,133 @@
+/* Chicago OS — GTK3 polish on top of the Chicago95 theme.
+ *
+ * Menus match the Start menu (jgmenu): silver #D4D0C8 with a Win95 bevel,
+ * XP-blue #245EDC selection, Ubuntu Sans, roomy items.
+ *
+ * Top-level windows, menus and popovers keep SQUARE outer corners on
+ * purpose: without a compositor X has no transparency, so a rounded
+ * outer corner is painted solid black. (Window corners are rounded by the
+ * IceWM frame instead.) Rounding *inside* an opaque surface is fine.
+ */
+
+/* ---- Context menus, menubar menus, combo popups ---------------------- */
+menu,
+.menu,
+.context-menu,
+window.popup menu {
+  background-color: #D4D0C8;
+  color: #202630;
+  padding: 5px;
+  border-radius: 0;
+  border: 1px solid #808080;
+  box-shadow: inset 1px 1px 0 #FFFFFF, inset -1px -1px 0 #A8A49C;
+  font-family: "Ubuntu Sans";
+  font-size: 10pt;
+}
+window.popup,
+window.popup decoration,
+.csd.popup decoration {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+menu menuitem,
+.menu menuitem,
+.context-menu menuitem {
+  min-height: 24px;
+  padding: 2px 12px 2px 8px;
+  border-radius: 5px;
+  color: #202630;
+  background: none;
+  text-shadow: none;
+}
+menu menuitem:hover,
+.menu menuitem:hover,
+.context-menu menuitem:hover {
+  background-color: #245EDC;
+  color: #FFFFFF;
+  box-shadow: none;
+}
+menu menuitem:hover label,
+menu menuitem:hover accelerator,
+menu menuitem:hover arrow {
+  color: #FFFFFF;
+  -gtk-icon-shadow: none;
+}
+menu menuitem:disabled,
+menu menuitem:disabled label {
+  color: #8C8880;
+}
+menu menuitem accelerator {
+  color: #5A5F68;
+  margin-left: 18px;
+}
+menu menuitem image,
+menu menuitem check,
+menu menuitem radio {
+  margin-right: 6px;
+}
+menu separator,
+.menu separator {
+  min-height: 1px;
+  margin: 4px 6px;
+  background: none;
+  border-top: 1px solid #9C9890;
+  border-bottom: 1px solid #FFFFFF;
+}
+menu > arrow {
+  background-color: #D4D0C8;
+  border: none;
+}
+
+/* ---- Popovers (GTK3 apps that use them instead of menus) ------------- */
+popover,
+popover.background {
+  background-color: #D4D0C8;
+  color: #202630;
+  border-radius: 0;
+  border: 1px solid #808080;
+  box-shadow: none;
+  padding: 4px;
+}
+popover modelbutton {
+  min-height: 24px;
+  padding: 2px 10px;
+  border-radius: 5px;
+}
+popover modelbutton:hover {
+  background-color: #245EDC;
+  color: #FFFFFF;
+}
+
+/* ---- Tooltips: XP pale yellow, like the dock's ---------------------- */
+tooltip,
+tooltip.background {
+  background-color: #FFFFE1;
+  color: #202630;
+  border: 1px solid #808080;
+  border-radius: 0;
+  box-shadow: none;
+}
+tooltip * { color: #202630; }
+
+/* ---- Inside windows: gentle rounding and XP-blue selection ---------- */
+button,
+spinbutton,
+entry,
+combobox button,
+notebook > header > tabs > tab,
+scale slider,
+scrollbar slider {
+  border-radius: 5px;
+}
+button:hover,
+modelbutton:hover {
+  box-shadow: inset 0 0 0 1px rgba(36, 94, 220, 0.35);
+}
+selection,
+*:selected,
+row:selected,
+treeview.view:selected {
+  background-color: #245EDC;
+  color: #FFFFFF;
+}

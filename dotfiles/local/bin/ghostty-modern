@@ -1,0 +1,7 @@
+#!/bin/sh
+# Ghostty launcher. Nothing is exported here on purpose: whatever this
+# script exports is inherited by every program started from a terminal
+# (an earlier GTK_THEME=Adwaita:dark made the desktop menu, the dock and
+# apps launched from them dark). Ghostty follows the session theme
+# (Chicago95), styled by ~/.config/gtk-4.0/gtk.css.
+exec /usr/bin/ghostty "$@"

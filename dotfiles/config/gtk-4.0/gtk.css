@@ -1,0 +1,77 @@
+/* Chicago OS — GTK4 / libadwaita polish (Ghostty's menus and dialogs).
+ * Same menu look as GTK3 and the Start menu: silver #D4D0C8, Win95
+ * bevel, XP-blue #245EDC selection. Outer corners square and no outer
+ * shadow: without a compositor those areas are painted solid black.
+ */
+popover.menu,
+popover {
+  background: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+popover > contents,
+popover.menu > contents {
+  background-color: #D4D0C8;
+  color: #202630;
+  border-radius: 0;
+  border: 1px solid #808080;
+  box-shadow: inset 1px 1px 0 #FFFFFF, inset -1px -1px 0 #A8A49C;
+  padding: 5px;
+  margin: 0;
+  font-family: "Ubuntu Sans";
+  font-size: 10pt;
+}
+popover > arrow { background: none; border: none; min-height: 0; min-width: 0; }
+
+popover.menu modelbutton,
+popover modelbutton {
+  min-height: 24px;
+  padding: 2px 12px 2px 8px;
+  border-radius: 5px;
+  color: #202630;
+}
+popover.menu modelbutton:hover,
+popover.menu modelbutton:selected,
+popover modelbutton:hover {
+  background-color: #245EDC;
+  color: #FFFFFF;
+}
+popover.menu modelbutton:hover accelerator,
+popover.menu modelbutton:hover label,
+popover.menu modelbutton:hover arrow {
+  color: #FFFFFF;
+}
+popover.menu modelbutton:disabled,
+popover.menu modelbutton:disabled label {
+  color: #8C8880;
+}
+popover.menu accelerator {
+  color: #5A5F68;
+  margin-left: 18px;
+}
+popover.menu separator,
+popover separator {
+  min-height: 1px;
+  margin: 4px 6px;
+  background: none;
+  border-top: 1px solid #9C9890;
+  border-bottom: 1px solid #FFFFFF;
+}
+
+tooltip,
+tooltip.background {
+  background-color: #FFFFE1;
+  color: #202630;
+  border: 1px solid #808080;
+  border-radius: 0;
+  box-shadow: none;
+}
+tooltip * { color: #202630; }
+
+button, entry, spinbutton, tab, scrollbar slider { border-radius: 5px; }
+selection,
+*:selected {
+  background-color: #245EDC;
+  color: #FFFFFF;
+}

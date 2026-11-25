@@ -248,6 +248,14 @@ track "$HOME/.config/gtk-3.0/settings.ini"
 cp "$REPO_DIR/dotfiles/config/gtk-3.0/settings.ini" "$HOME/.config/gtk-3.0/settings.ini"
 track "$HOME/.config/gtk-4.0/settings.ini"
 cp "$REPO_DIR/dotfiles/config/gtk-4.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini"
+# Menus, popovers and tooltips styled to match the Start menu.
+for v in gtk-3.0 gtk-4.0; do
+  track "$HOME/.config/$v/gtk.css"
+  cp "$REPO_DIR/dotfiles/config/$v/gtk.css" "$HOME/.config/$v/gtk.css"
+done
+track "$HOME/.local/bin/ghostty-modern"
+cp "$REPO_DIR/dotfiles/local/bin/ghostty-modern" "$HOME/.local/bin/ghostty-modern"
+chmod +x "$HOME/.local/bin/ghostty-modern"
 track "$HOME/.config/mimeapps.list"
 cp "$REPO_DIR/dotfiles/config/mimeapps.list" "$HOME/.config/mimeapps.list"
 track "$HOME/.config/dunst/dunstrc"

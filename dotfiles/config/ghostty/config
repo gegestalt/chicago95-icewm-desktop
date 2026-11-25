@@ -27,7 +27,7 @@ app-notifications = no-clipboard-copy,config-reload
 
 # --- Type -------------------------------------------------------------------
 font-family = JetBrains Mono
-font-size = 10.5
+font-size = 13
 font-feature = -liga
 adjust-cell-height = 2
 bold-is-bright = false
@@ -65,3 +65,7 @@ palette = 12=#7aaeff
 palette = 13=#ddb3ff
 palette = 14=#6ff2e5
 palette = 15=#f2faf8
+
+# Programs started from this terminal use the desktop theme, not a dark
+# GTK theme inherited from however Ghostty itself was launched.
+env = GTK_THEME=Chicago95
