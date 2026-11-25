@@ -100,7 +100,12 @@ follow_host_size() {
 
 pick_scale() {
   local width="$1"
-  if [ "$SCALE" != auto ]; then echo "$SCALE"; return; fi
+  # A fixed SCALE is used as long as it leaves a usable desktop (at least
+  # 1024 logical px wide); otherwise (e.g. Retina full resolution switched
+  # off in the VM settings) fall back to picking one automatically.
+  if [ "$SCALE" != auto ] && awk -v w="$width" -v s="$SCALE" 'BEGIN{exit !(w/s >= 1024)}'; then
+    echo "$SCALE"; return
+  fi
   # Sticky: resizing or moving the VM window doesn't change the pixel
   # density, so keep the current scale while the desktop stays a sensible
   # size (1024-2400 logical px wide). Re-guessing from every new width

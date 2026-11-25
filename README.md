@@ -156,27 +156,40 @@ can only see the themes bundled in the `gtk-common-themes` snap) — that's
 handled by the separate, opt-in `optional/migrate-firefox-to-deb.sh`, not by
 `install.sh`, since it removes a package and touches your browser profile.
 
-## Prerequisites
+## Fresh install (new VM, one command)
 
-- Ubuntu (apt-based)
-- [Ghostty](https://ghostty.org/) installed (`apt install ghostty` on recent
-  Ubuntu; see ghostty.org for other distros/versions) — it's the default
-  terminal this repo wires up, and `install.sh` doesn't install it for you
-- The upstream Chicago95 theme already installed:
-  ```
-  git clone https://github.com/grassmunk/Chicago95.git ~/Chicago95
-  cd ~/Chicago95 && python3 installer.py
-  ```
-
-## Install
+On a fresh **Ubuntu 26.04 desktop** install, nothing else needed first:
 
 ```
-git clone https://github.com/gegestalt/chicago95-icewm-desktop.git
-cd chicago95-icewm-desktop
+sudo apt install -y git
+git clone https://github.com/gegestalt/chicago95-icewm-desktop.git ~/chicago95-icewm-desktop
+cd ~/chicago95-icewm-desktop
 ./install.sh
+reboot
 ```
 
-Log out and pick the **IceWM Chicago95** session at the login screen.
+One run does everything:
+
+1. **System** (`system-setup.sh`): X11, LightDM and the IceWM Chicago95
+   session as the default login, US keyboard, VS Code (Microsoft repo),
+   Ghostty as the default terminal, the dev toolchain (git, gh, docker,
+   node, rust, ripgrep...), `nmap` and `ifconfig` (net-tools).
+2. **Theme**: the upstream Chicago95 theme, pinned to the commit this
+   desktop was built with, installed without its GUI installer.
+3. **Desktop**: every config in this repo (window theme, dock, Start
+   menu, fonts, display scaling in `dotfiles/config/chicago-os/display.conf`,
+   Ghostty, VS Code, Firefox), plus Claude Code.
+4. **Slim-down** (`system/slim-down.sh`): removes the GNOME session,
+   unused apps (Thunderbird, Rhythmbox, Shotwell, Remmina...), telemetry,
+   accessibility daemons, printing and VM-irrelevant services. Everything
+   the desktop uses is protected first. Preview with
+   `./system/slim-down.sh --dry-run`.
+
+Still manual afterwards: `gh auth login`, signing in to `claude`, and in
+VMware Fusion turning on *Display > Use full resolution for Retina
+display* (the desktop is tuned for 2x).
+
+Skip parts with `CHICAGO_SKIP_SYSTEM=1` or `CHICAGO_SKIP_SLIM=1`.
 
 Display DPI (and the 1x-vs-2x theme-asset choice it drives) is detected
 once and then reused on every later run — some environments (observed on

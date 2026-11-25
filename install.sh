@@ -10,10 +10,18 @@
 # Every file this script overwrites is backed up first, and every gsettings
 # key it changes has its old value recorded — see uninstall.sh to revert.
 #
-# Usage:
-#   git clone <this repo> ~/chicago95-icewm-desktop
+# Usage (fresh Ubuntu 26.04, nothing else needed first):
+#   git clone https://github.com/gegestalt/chicago95-icewm-desktop ~/chicago95-icewm-desktop
 #   cd ~/chicago95-icewm-desktop
 #   ./install.sh
+#   reboot
+#
+# One run takes a stock Ubuntu desktop to the finished Chicago OS:
+# system setup (system-setup.sh: X11 + LightDM + IceWM session, VS Code,
+# Ghostty, dev tools), the upstream Chicago95 theme, every config in this
+# repo, Claude Code, then removes what Chicago OS doesn't use
+# (system/slim-down.sh). Skip parts with CHICAGO_SKIP_SYSTEM=1 or
+# CHICAGO_SKIP_SLIM=1.
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -30,6 +38,11 @@ fi
 
 echo "== Chicago95 IceWM Desktop installer =="
 echo
+
+if [ -z "${CHICAGO_SKIP_SYSTEM:-}" ]; then
+  echo "-- System setup (sudo required) --"
+  "$REPO_DIR/system-setup.sh"
+fi
 
 # ---------------------------------------------------------------------------
 # 0. Backup tracking. Every destination path this script writes to is passed
@@ -100,18 +113,23 @@ echo "-- Backups for this run: $BACKUP_ROOT --"
 # ---------------------------------------------------------------------------
 # 1. Prerequisite: the upstream Chicago95 GTK/icon/cursor theme
 # ---------------------------------------------------------------------------
+# Pinned to the upstream commit Chicago OS was built and tested with, so
+# a fresh install looks exactly the same. Copies what upstream's GUI
+# installer.py would (theme, icons, cursors, fonts) without its dialogs.
+CHICAGO95_UPSTREAM=https://github.com/grassmunk/Chicago95.git
+CHICAGO95_COMMIT=5da19b8
 if [ ! -d "$HOME/.themes/Chicago95" ] || [ ! -d "$HOME/.icons/Chicago95-tux" ]; then
-  cat >&2 <<'EOF'
-The base Chicago95 GTK/icon theme isn't installed yet. This repo builds on
-top of it rather than vendoring a copy. Install it first:
-
-  git clone https://github.com/grassmunk/Chicago95.git ~/Chicago95
-  cd ~/Chicago95
-  python3 installer.py
-
-Then re-run this script.
-EOF
-  exit 1
+  echo "-- Installing the upstream Chicago95 theme ($CHICAGO95_COMMIT) --"
+  command -v git >/dev/null 2>&1 || sudo apt-get install -y git
+  if [ ! -d "$HOME/Chicago95/.git" ]; then
+    git clone -q "$CHICAGO95_UPSTREAM" "$HOME/Chicago95"
+  fi
+  git -C "$HOME/Chicago95" checkout -q "$CHICAGO95_COMMIT"
+  mkdir -p "$HOME/.themes" "$HOME/.icons" "$HOME/.fonts"
+  cp -a "$HOME/Chicago95/Theme/Chicago95" "$HOME/.themes/"
+  cp -a "$HOME/Chicago95/Icons/." "$HOME/.icons/"
+  cp -a "$HOME/Chicago95/Cursors/." "$HOME/.icons/"
+  cp -a "$HOME/Chicago95/Fonts/." "$HOME/.fonts/"
 fi
 
 # ---------------------------------------------------------------------------
@@ -329,7 +347,7 @@ cp "$REPO_DIR/dotfiles/config/picom/picom.conf" "$HOME/.config/picom/picom.conf"
 # Dock (tint2), Start menu (jgmenu), fonts, terminal look, Firefox defaults.
 echo "-- Installing dock, Start menu, fonts and app look --"
 for f in tint2/tint2rc.base jgmenu/jgmenurc.base jgmenu/start-pinned.csv jgmenu/start-footer.csv \
-         fontconfig/fonts.conf ghostty/config; do
+         fontconfig/fonts.conf ghostty/config chicago-os/display.conf; do
   mkdir -p "$HOME/.config/$(dirname "$f")"
   track "$HOME/.config/$f"
   cp "$REPO_DIR/dotfiles/config/$f" "$HOME/.config/$f"
@@ -338,11 +356,31 @@ mkdir -p "$HOME/.local/share/applications"
 track "$HOME/.local/share/applications/chicago-app-grid.desktop"
 cp "$REPO_DIR/dotfiles/local/share/applications/chicago-app-grid.desktop" "$HOME/.local/share/applications/"
 fc-cache -f >/dev/null 2>&1 || true
+# A fresh install has no Firefox profile until Firefox first runs; start
+# it once headless so the profile (and user.js below) exists right away.
+if command -v firefox >/dev/null 2>&1 \
+   && ! ls -d "$HOME"/snap/firefox/common/.mozilla/firefox/*.default* "$HOME"/.mozilla/firefox/*.default* >/dev/null 2>&1; then
+  echo "-- Creating the Firefox profile --"
+  (cd /tmp && timeout 60 firefox --headless --screenshot about:blank >/dev/null 2>&1) || true
+fi
 for prof in "$HOME"/snap/firefox/common/.mozilla/firefox/*.default* "$HOME"/.mozilla/firefox/*.default*; do
   [ -d "$prof" ] || continue
   track "$prof/user.js"
   cp "$REPO_DIR/dotfiles/firefox/user.js" "$prof/user.js"
 done
+
+# VS Code extensions.
+if command -v code >/dev/null 2>&1; then
+  while read -r ext; do
+    [ -n "$ext" ] && code --install-extension "$ext" >/dev/null 2>&1 || true
+  done < "$REPO_DIR/dotfiles/vscode/extensions.txt"
+fi
+
+# Claude Code (official native installer; lands in ~/.local/bin/claude).
+if [ ! -x "$HOME/.local/bin/claude" ] && ! command -v claude >/dev/null 2>&1; then
+  echo "-- Installing Claude Code --"
+  curl -fsSL https://claude.ai/install.sh | bash || echo "   (Claude Code install failed; rerun: curl -fsSL https://claude.ai/install.sh | bash)"
+fi
 
 # ---------------------------------------------------------------------------
 # 7c. Chicago95 Control Panel — the single "Settings" entry in the app grid
@@ -628,8 +666,23 @@ if pgrep -x icewm >/dev/null 2>&1; then
   echo "-- IceWM reloaded live --"
 fi
 
+# ---------------------------------------------------------------------------
+# 13. Remove what Chicago OS doesn't use (GNOME session, unused apps,
+#    telemetry, printing...). Last, so everything above is in place and
+#    protected first. See system/slim-down.sh for the exact lists.
+# ---------------------------------------------------------------------------
+if [ -z "${CHICAGO_SKIP_SLIM:-}" ]; then
+  "$REPO_DIR/system/slim-down.sh"
+fi
+
 echo
-echo "Done. Log out and pick the 'IceWM Chicago95' session for a clean start."
+echo "Done. Reboot: LightDM starts straight into the IceWM Chicago95 session."
+echo
+echo "Still manual (accounts and host settings can't be scripted):"
+echo "  gh auth login            GitHub CLI"
+echo "  claude                   sign in to Claude Code"
+echo "  VMware Fusion: Settings > Display > 'Use full resolution for Retina display'"
+echo "                 (without it the guest is 1280x800 and the 2x scale won't fit)"
 if [ "${PLYMOUTH_INSTALLED:-0}" = "1" ]; then
   echo "The Plymouth boot theme is staged — reboot to see it."
 fi
