@@ -294,6 +294,23 @@ for sz in 16 22 24 32 48 256; do
   track "$HOME/.local/share/icons/hicolor/${sz}x${sz}/apps/chicago95-applications.png"
   cp "$REPO_DIR/icons/chicago95-applications/$sz.png" "$HOME/.local/share/icons/hicolor/${sz}x${sz}/apps/chicago95-applications.png"
 done
+# Firefox: the theme's "firefox" icon is a ship's wheel; its fox logo is
+# "firefox_2". Firefox looks its window icon up by name (taskbar, Alt+Tab,
+# title bar), so make "firefox" the fox in every size.
+FF_ICONS="$HOME/.icons/Chicago95-tux/apps"
+if [ -f "$FF_ICONS/scalable/firefox_2.svg" ]; then
+  for sz in 16 22 24 32 48; do
+    [ -f "$FF_ICONS/$sz/firefox.png" ] || continue
+    track "$FF_ICONS/$sz/firefox.png"
+    if [ -f "$FF_ICONS/$sz/firefox_2.png" ]; then
+      cp "$FF_ICONS/$sz/firefox_2.png" "$FF_ICONS/$sz/firefox.png"
+    else
+      convert -background none -resize "${sz}x${sz}" "$FF_ICONS/scalable/firefox_2.svg" "$FF_ICONS/$sz/firefox.png"
+    fi
+  done
+  track "$FF_ICONS/scalable/firefox.svg"
+  cp "$FF_ICONS/scalable/firefox_2.svg" "$FF_ICONS/scalable/firefox.svg"
+fi
 gtk-update-icon-cache -f "$HOME/.icons/Chicago95-tux" >/dev/null 2>&1 || true
 
 # ---------------------------------------------------------------------------
