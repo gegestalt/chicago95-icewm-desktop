@@ -152,9 +152,9 @@ script can work around. This repo replaces them with themable equivalents
 instead of trying to force them.
 
 Firefox as a **snap** is sandboxed away from any custom theme entirely (it
-can only see the themes bundled in the `gtk-common-themes` snap) — that's
-handled by the separate, opt-in `optional/migrate-firefox-to-deb.sh`, not by
-`install.sh`, since it removes a package and touches your browser profile.
+can only see the themes bundled in the `gtk-common-themes` snap). The
+installer swaps it for Mozilla's .deb and carries your profile over
+(`system/firefox-deb.sh`), then removes snapd entirely.
 
 ## Fresh install (new VM, one command)
 
@@ -181,7 +181,10 @@ One run does everything:
    Ghostty, VS Code, Firefox), plus Claude Code.
 4. **Slim-down** (`system/slim-down.sh`): removes the GNOME session,
    unused apps (Thunderbird, Rhythmbox, Shotwell, Remmina...), telemetry,
-   accessibility daemons, printing and VM-irrelevant services. Everything
+   accessibility daemons, printing, unused toolchains (x86 cross compilers,
+   qemu, Boost), snapd and its runtimes (Firefox becomes a .deb), and inside
+   a VM the hardware firmware (`linux-virtual` kernel package, same kernel).
+   Everything
    the desktop uses is protected first. Preview with
    `./system/slim-down.sh --dry-run`.
 
@@ -198,11 +201,6 @@ logins, and re-detecting on every run would make a plain re-run of
 `install.sh` randomly shrink your fonts/taskbar back down. If you
 actually change monitors and want a fresh probe, run
 `CHICAGO95_REDETECT_DPI=1 ./install.sh`.
-
-Optional, recommended if Firefox is installed as a snap:
-```
-./optional/migrate-firefox-to-deb.sh
-```
 
 ## Uninstall
 
@@ -226,7 +224,9 @@ the wrong default. Pass a specific run id (a timestamp directory name under
 ```
 install.sh                        main installer (idempotent, DPI-aware, self-backing-up)
 uninstall.sh                      reverts a previous install.sh run
-optional/migrate-firefox-to-deb.sh  snap -> .deb Firefox migration (opt-in)
+system-setup.sh                   root half: X11/LightDM session, apps, dev tools
+system/firefox-deb.sh             snap -> .deb Firefox, profile carried over
+system/slim-down.sh               removes what Chicago OS doesn't use (--dry-run)
 dotfiles/icewm/                   menu, toolbar, preferences, theme assets (1x + 2x)
 dotfiles/config/                  gtk-3.0, gtk-4.0, mimeapps.list, dunst
 dotfiles/local/bin/build-app-grid script that (re)builds ~/Applications

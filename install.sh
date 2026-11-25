@@ -690,7 +690,3 @@ echo
 echo "Everything this script overwrote is backed up at:"
 echo "  $BACKUP_ROOT"
 echo "Run ./uninstall.sh to revert this run."
-echo
-echo "Optional next step: run optional/migrate-firefox-to-deb.sh to replace a"
-echo "snap-installed Firefox with the real .deb — snap sandboxing means Firefox"
-echo "otherwise cannot see this theme at all."

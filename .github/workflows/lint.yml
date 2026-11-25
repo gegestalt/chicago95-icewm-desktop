@@ -9,7 +9,9 @@ env:
   SCRIPTS: >-
     install.sh
     uninstall.sh
-    optional/migrate-firefox-to-deb.sh
+    system-setup.sh
+    system/slim-down.sh
+    system/firefox-deb.sh
     dotfiles/local/bin/build-app-grid
 
 jobs:

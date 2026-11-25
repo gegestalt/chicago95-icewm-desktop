@@ -72,6 +72,10 @@ rustup default stable
 sudo usermod -aG docker "$USER"
 
 # ---------------------------------------------------------------------------
+step "Firefox: Mozilla's .deb instead of the snap (profile carried over)"
+"$REPO_DIR/system/firefox-deb.sh"
+
+# ---------------------------------------------------------------------------
 step "Performance: switch off services a single-user dev VM doesn't use"
 # All reversible: `sudo systemctl enable --now <name>` brings one back.
 #   kdump-tools    reserves ~512 MB RAM at boot for kernel crash dumps

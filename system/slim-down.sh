@@ -41,7 +41,11 @@ KEEP=(
   # dev toolchain
   build-essential git curl wget jq ripgrep fd-find fzf htop tree unzip
   nodejs npm rustup gh docker.io docker-compose-v2 inotify-tools
-  nmap net-tools openssh-client xclip xsel
+  nmap net-tools openssh-client xclip xsel gcc g++ gdb make cmake
+  clang clangd clang-format clang-tidy llvm lldb golang-go
+  # kernel: same kernel, VM flavour (no hardware firmware), see below
+  linux-virtual-hwe-26.04 linux-image-virtual-hwe-26.04
+  linux-headers-virtual-hwe-26.04 linux-headers-generic-hwe-26.04
 )
 
 PURGE_PATTERNS=(
@@ -67,9 +71,32 @@ PURGE_PATTERNS=(
   ubuntu-pro-client-l10n
   # spellcheck dictionaries and GNOME language packs
   'language-pack-gnome-*' 'hunspell-*' 'hyphen-*' 'mythes-*'
+  # Chinese/Korean/Japanese input methods (only xkb layouts are used)
+  'ibus-table*' ibus-libpinyin 'libpinyin*' ibus-hangul ibus-mozc ibus-anthy
+  ibus-chewing ibus-m17n ibus-unikey
+  # unused themes and wallpapers (Chicago95 replaces them)
+  'ubuntu-wallpapers*' 'yaru-*' gnome-backgrounds libreoffice-style-yaru
+  libreoffice-style-elementary 'libreoffice-help-*'
+  'libreoffice-l10n-*'
+  # unused toolchains: x86-64 cross compilers + qemu, Boost/gtest, valgrind
+  'gcc-*x86-64-linux-gnu' 'g++-*x86-64-linux-gnu' 'cpp-*x86-64-linux-gnu'
+  'binutils-x86-64-linux-gnu' '*-amd64-cross' 'qemu-user*'
+  libboost-dev 'libboost*-dev' libgtest-dev googletest libgmock-dev
+  valgrind cppcheck
+  # hardware firmware: a VM loads none (only removed inside a VM, below)
 )
 
 SNAPS=(thunderbird snap-store desktop-security-center prompting-client firmware-updater)
+
+# Inside a VM: the generic kernel package drags in ~700 MB of firmware
+# for real hardware. linux-virtual is the same kernel without it.
+IN_VM=0
+systemd-detect-virt -q 2>/dev/null && IN_VM=1
+FIRMWARE=()
+if [ "$IN_VM" = 1 ]; then
+  PURGE_PATTERNS+=('linux-firmware*' 'firmware-*' 'linux-generic-hwe-*' 'linux-image-generic-hwe-*')
+  FIRMWARE=(linux-virtual-hwe-26.04)
+fi
 
 installed() {
   dpkg-query -W -f='${db:Status-Abbrev} ${Package}\n' "$@" 2>/dev/null \
@@ -77,8 +104,18 @@ installed() {
 }
 
 mapfile -t keep < <(installed "${KEEP[@]}")
+# Packages to add rather than keep (the VM kernel package).
+mapfile -t add < <(for p in "${FIRMWARE[@]}"; do dpkg-query -W -f='${db:Status-Abbrev}\n' "$p" 2>/dev/null | grep -q '^ii' || echo "$p"; done)
 mapfile -t purge < <(installed "${PURGE_PATTERNS[@]}" | grep -vxF -f <(printf '%s\n' "${keep[@]}"))
 mapfile -t snaps < <(snap list 2>/dev/null | awk 'NR > 1 { print $1 }' | grep -xF -f <(printf '%s\n' "${SNAPS[@]}") || true)
+# snapd itself goes once no app snap is left (system/firefox-deb.sh moves
+# Firefox off snap); its runtimes (core, gnome, mesa...) go with it.
+APP_SNAPS_LEFT=$(snap list 2>/dev/null | awk 'NR > 1 { print $1 }' \
+  | grep -vxE 'bare|core[0-9]*|snapd|gtk-common-themes|gnome-[0-9-]+|mesa-[0-9]+|snapd-desktop-integration' \
+  | grep -vxF -f <(printf '%s\n' "${SNAPS[@]}") || true)
+if [ -z "$APP_SNAPS_LEFT" ] && dpkg-query -W -f='${db:Status-Abbrev}' snapd 2>/dev/null | grep -q '^ii'; then
+  purge+=(snapd)
+fi
 
 if [ ${#purge[@]} -eq 0 ] && [ ${#snaps[@]} -eq 0 ]; then
   echo "Nothing to remove: the system is already slim."
@@ -88,9 +125,12 @@ fi
 if [ "$DRY" = 1 ]; then
   # Simulation: naming the KEEP packages on the same command line makes
   # apt treat them as wanted, the same effect apt-mark manual has below.
-  out=$(apt-get -s --autoremove install "${keep[@]}" "${purge[@]/%/-}" 2>&1)
+  out=$(apt-get -s --autoremove install "${keep[@]}" "${add[@]}" "${purge[@]/%/-}" 2>&1 || true)
+  if printf '%s\n' "$out" | grep -q '^E:'; then printf '%s\n' "$out" | sed -n '/^E:/,$p'; exit 1; fi
   removed=$(printf '%s\n' "$out" | awk '/^Remv/ { print $2 }')
-  echo "Would remove $(printf '%s\n' "$removed" | grep -c .) packages:"
+  # shellcheck disable=SC2086  # one argument per package
+  mb=$(dpkg-query -W -f='${Installed-Size}\n' $removed 2>/dev/null | awk '{ s += $1 } END { printf "%d", s / 1024 }')
+  echo "Would remove $(printf '%s\n' "$removed" | grep -c .) packages (${mb} MB):"
   printf '%s\n' "$removed" | column -c "${COLUMNS:-120}"
   [ ${#snaps[@]} -gt 0 ] && echo && echo "Would remove snaps: ${snaps[*]}"
   exit 0
@@ -107,19 +147,32 @@ echo "-- Removing ${#purge[@]} packages and everything only they needed --"
 printf '#!/bin/sh\nexit 101\n' | sudo tee /usr/sbin/policy-rc.d >/dev/null
 sudo chmod +x /usr/sbin/policy-rc.d
 trap 'sudo rm -f /usr/sbin/policy-rc.d' EXIT
+for s in "${snaps[@]}"; do
+  echo "-- Removing snap $s --"
+  sudo snap remove --purge "$s" || true
+done
+if [ ${#add[@]} -gt 0 ]; then
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "${add[@]}"
+fi
 if [ ${#purge[@]} -gt 0 ]; then
   sudo DEBIAN_FRONTEND=noninteractive apt-get purge -y --autoremove "${purge[@]}"
 fi
 sudo rm -f /usr/sbin/policy-rc.d
 trap - EXIT
+if [[ " ${purge[*]} " == *" snapd "* ]]; then
+  # Keep it gone: Ubuntu's stub packages (firefox, thunderbird...) would
+  # otherwise pull snapd back in.
+  printf 'Package: snapd\nPin: release *\nPin-Priority: -10\n' | sudo tee /etc/apt/preferences.d/no-snapd >/dev/null
+  sudo rm -rf /var/lib/snapd /var/cache/snapd /snap "$HOME/snap"
+fi
+# Config files left behind by packages removed earlier.
+mapfile -t residual < <(dpkg -l | awk '/^rc/ { print $2 }')
+[ ${#residual[@]} -gt 0 ] && sudo dpkg --purge "${residual[@]}" >/dev/null
 
-for s in "${snaps[@]}"; do
-  echo "-- Removing snap $s --"
-  sudo snap remove --purge "$s" || true
-done
 # Old disabled snap revisions waste a few hundred MB each.
-snap list --all 2>/dev/null | awk '/disabled/ { print $1, $3 }' | while read -r name rev; do
+command -v snap >/dev/null && snap list --all 2>/dev/null | awk '/disabled/ { print $1, $3 }' | while read -r name rev; do
   sudo snap remove "$name" --revision="$rev" || true
 done
 sudo apt-get clean
+sudo journalctl --vacuum-size=50M >/dev/null 2>&1 || true
 echo "-- Slim-down done: $(df -h / | awk 'NR==2 { print $3 " used, " $4 " free" }') --"
