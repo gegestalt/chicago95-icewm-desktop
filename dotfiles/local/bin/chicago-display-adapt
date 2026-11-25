@@ -345,7 +345,13 @@ apply() {
   # running this from a terminal can't hand them that terminal's settings
   # (a leaked GTK_THEME=Adwaita:dark once made the desktop menu dark).
   set -- env -u FONTCONFIG_FILE -u GDK_SCALE -u GDK_DPI_SCALE GTK_THEME=Chicago95
+  # IceWM plays its restart and startup sounds (icesound) on every
+  # reload, so going full screen chimed twice. Mute icesound for the
+  # reload; the login sound still plays once at real log-in.
+  local had_sound=0
+  if pgrep -u "$USER" -x icesound >/dev/null; then had_sound=1; pkill -u "$USER" -x icesound; fi
   pgrep -u "$USER" -x icewm >/dev/null && icewm -r >/dev/null 2>&1
+  [ "$had_sound" = 1 ] && (sleep 5; setsid "$@" icesound >/dev/null 2>&1 9>&- &)
   # tint2 reads the DPI only at start-up (a SIGUSR1 reload keeps the old
   # size), so restart it.
   if pgrep -u "$USER" -x tint2 >/dev/null; then

@@ -450,7 +450,8 @@ if command -v icesound >/dev/null 2>&1; then
   }
   map_sound startup.wav     desktop-login.wav
   map_sound shutdown.wav    desktop-logout.wav
-  map_sound restart.wav     desktop-logout.wav
+  # No restart.wav: IceWM restarts on every display change (full screen,
+  # resizing), so a restart sound would play constantly.
   map_sound dialogOpen.wav  dialog-information.wav
   map_sound dialogClose.wav window-inactive-click.wav
 fi
