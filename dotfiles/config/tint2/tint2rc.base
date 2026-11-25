@@ -162,8 +162,8 @@ border_color_pressed = #000000 100
 
 #---- Panel ---------------------------------------------------------------
 panel_items = PLTSC
-panel_size = 96% 38
-panel_margin = 0 8
+panel_size = 100% 38
+panel_margin = 16 8
 panel_padding = 8 5 6
 panel_background_id = 1
 wm_menu = 1
@@ -171,7 +171,7 @@ panel_dock = 0
 panel_position = bottom center horizontal
 panel_layer = top
 panel_monitor = all
-panel_shrink = 1
+panel_shrink = 0
 autohide = 0
 strut_policy = follow_size
 panel_window_name = chicago-dock
