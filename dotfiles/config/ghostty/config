@@ -27,7 +27,9 @@ app-notifications = no-clipboard-copy,config-reload
 
 # --- Type -------------------------------------------------------------------
 font-family = JetBrains Mono
-font-size = 13
+# Ghostty follows the system DPI, which TEXT_SCALE (display.conf) raises;
+# 9.5 here at TEXT_SCALE=1.5 is the same size as the rest of the desktop.
+font-size = 9.5
 font-feature = -liga
 adjust-cell-height = 2
 bold-is-bright = false
