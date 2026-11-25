@@ -51,9 +51,9 @@ DESKTOP_ICON=32
 CURSOR=24
 # 1 = resize the desktop to the VM window whenever the host changes it
 FOLLOW_HOST=1
-# 1 = window shadows/rounded window corners (picom). Needs GPU acceleration
-# to be smooth; read at login.
-COMPOSITOR=0
+# auto = smooth rounded corners + shadows (picom) only when 3D acceleration
+# is on; 1 = always, 0 = never. Read at login.
+COMPOSITOR=auto
 UI_FONT='Ubuntu Sans'
 MONO_FONT='JetBrains Mono'
 EOF

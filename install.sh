@@ -130,7 +130,7 @@ sudo apt-get install -y \
   blueman pavucontrol xfce4-power-manager hardinfo2 \
   python3-gi python3-cairo gir1.2-gtk-3.0 \
   imagemagick \
-  xdotool picom x11-utils tint2 jgmenu fonts-ubuntu fonts-jetbrains-mono
+  xdotool picom x11-utils mesa-utils tint2 jgmenu fonts-ubuntu fonts-jetbrains-mono
 
 # ---------------------------------------------------------------------------
 # 3. Detect display DPI and pick the matching theme-asset scale

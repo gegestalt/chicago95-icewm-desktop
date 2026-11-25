@@ -72,13 +72,20 @@ nm-applet &
 # VMware host/guest clipboard and drag/drop (no-op outside a VMware VM).
 [ -x /usr/bin/vmware-user ] && /usr/bin/vmware-user >/tmp/vmware-user.log 2>&1 &
 
-# Compositor (window shadows, rounded window corners): OFF by default.
-# Without GPU acceleration (VMware: "Accelerate 3D graphics" off, renderer
-# llvmpipe) picom either repaints only damaged areas, which on vmwgfx left
-# stale patches and blank menus, or repaints everything, which costs a CPU
-# core. Everything draws correctly without it. To turn it on, set
-# COMPOSITOR=1 in ~/.config/chicago-os/display.conf and log in again.
-if grep -qs '^COMPOSITOR=1' "$HOME/.config/chicago-os/display.conf" && command -v picom >/dev/null 2>&1; then
+# Compositor: smooth (anti-aliased) rounded corners and soft shadows.
+# COMPOSITOR=auto (default) turns it on only when OpenGL is hardware
+# accelerated (VMware Fusion: Settings > Display > "Accelerate 3D
+# graphics"). On software rendering (llvmpipe) picom costs more than a CPU
+# core even when idle, and its cheaper modes left stale patches and blank
+# menus on vmwgfx, so it stays off and the theme's pixel-rounded frame
+# corners are used instead. COMPOSITOR=1 forces it on, 0 forces it off.
+# Settings: ~/.config/chicago-os/display.conf (read at login).
+comp=$(sed -n 's/^COMPOSITOR=//p' "$HOME/.config/chicago-os/display.conf" 2>/dev/null | tail -1)
+case "${comp:-auto}" in
+  1) use_comp=1 ;;
+  auto) glxinfo -B 2>/dev/null | grep -q 'Accelerated: yes' && use_comp=1 ;;
+esac
+if [ "${use_comp:-0}" = 1 ] && command -v picom >/dev/null 2>&1; then
   pgrep -u "$USER" -x picom >/dev/null || picom --config "$HOME/.config/picom/picom.conf" -b
 fi
 
