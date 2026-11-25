@@ -197,6 +197,10 @@ write_prefoverride() {
     # Window buttons on the left, macOS order: close, minimize, maximize.
     echo 'TitleButtonsLeft="xim"'
     echo 'TitleButtonsRight=""'
+    # Rounded window corners come from transparent pixels in the theme's
+    # frame corner pixmaps (see tools/round-frame-corners); let that shape
+    # also clip the app's own corner so the outline is round, not notched.
+    echo 'ShapesProtectClientWindow=0'
     # Taskbar. The floating dock (tint2, ~/.config/tint2/tint2rc) replaces
     # IceWM's edge-to-edge bar when it is installed; otherwise IceWM's bar
     # is kept but with a plain text clock and no CPU/RAM/network graphs.

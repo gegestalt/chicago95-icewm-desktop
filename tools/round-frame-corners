@@ -1,0 +1,25 @@
+#!/bin/sh
+# round-frame-corners THEME_DIR [RADIUS]
+# Cuts rounded corners into an IceWM theme's frame corner pixmaps
+# (frame[AI]{TL,TR,BL,BR}.xpm). IceWM turns transparent pixels in these
+# into an X Shape mask, so the window outline itself becomes rounded:
+# no compositor needed, zero runtime cost. A 1px line in the bevel colour
+# is drawn along the curve so it reads as a corner, not a chip.
+# Safe to run again on already-rounded pixmaps.
+set -eu
+dir="$1"; r="${2:-12}"
+for f in "$dir"/frame[AI]TL.xpm "$dir"/frame[AI]TR.xpm "$dir"/frame[AI]BL.xpm "$dir"/frame[AI]BR.xpm; do
+  [ -f "$f" ] || continue
+  case "$f" in
+    *TL.xpm) cx="$r";     cy="$r";     in="i<$r && j<$r";;
+    *TR.xpm) cx="w-$r";   cy="$r";     in="i>=w-$r && j<$r";;
+    *BL.xpm) cx="$r";     cy="h-$r";   in="i<$r && j>=h-$r";;
+    *BR.xpm) cx="w-$r";   cy="h-$r";   in="i>=w-$r && j>=h-$r";;
+  esac
+  # Bevel: light outer edge on top corners, black on bottom corners.
+  case "$f" in *T[LR].xpm) edge='0.8706';; *) edge='0';; esac
+  d="hypot(i+0.5-($cx),j+0.5-($cy))"
+  magick "$f" -alpha set \
+    -fx "($in) ? ( $d > $r ? 0 : ( $d > $r-1.25 ? (channel($edge,$edge,$edge,1)) : u ) ) : u" \
+    "$f"
+done

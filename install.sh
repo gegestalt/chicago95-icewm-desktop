@@ -205,6 +205,33 @@ cp -a "$REPO_DIR/dotfiles/icewm/themes-$SCALE/Chicago" "$HOME/.icewm/themes/Chic
 track "$HOME/.icewm/themes/ChicagoModernXP"
 rm -rf "$HOME/.icewm/themes/ChicagoModernXP"
 cp -a "$REPO_DIR/dotfiles/icewm/themes-modern/ChicagoModernXP" "$HOME/.icewm/themes/ChicagoModernXP"
+
+# VS Code: use the IceWM frame (traffic-light buttons, rounded corners).
+# Merged into existing settings so the user's own keys are kept.
+if [ -d "$HOME/.config/Code" ] || command -v code >/dev/null 2>&1; then
+  vsc="$HOME/.config/Code/User/settings.json"
+  mkdir -p "$(dirname "$vsc")"; track "$vsc"
+  python3 - "$vsc" <<'PY'
+import json, re, sys
+p = sys.argv[1]
+try:
+    txt = open(p).read()
+    txt = re.sub(r'^\s*//.*$', '', txt, flags=re.M)
+    txt = re.sub(r',(\s*[}\]])', r'\1', txt)
+    cfg = json.loads(txt) if txt.strip() else {}
+except FileNotFoundError:
+    cfg = {}
+cfg.update({
+    "window.titleBarStyle": "native",
+    "window.customTitleBarVisibility": "never",
+    "window.menuBarVisibility": "classic",
+    "editor.fontFamily": "'JetBrains Mono', monospace",
+    "terminal.integrated.fontFamily": "'JetBrains Mono'",
+    "terminal.external.linuxExec": "ghostty",
+})
+open(p, "w").write(json.dumps(cfg, indent=4) + "\n")
+PY
+fi
 chmod +x "$HOME/.icewm/startup"
 
 # Fill in the real home directory (IceWM config files don't expand $HOME).
