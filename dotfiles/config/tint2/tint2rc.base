@@ -161,7 +161,7 @@ background_color_pressed = #FFFFE1 100
 border_color_pressed = #000000 100
 
 #---- Panel ---------------------------------------------------------------
-panel_items = PLTSC
+panel_items = PLTSBC
 panel_size = 100% 38
 panel_margin = 0 0
 panel_padding = 8 5 6
@@ -272,6 +272,19 @@ clock_tooltip = %A, %-d %B %Y
 clock_tooltip_timezone =
 clock_lclick_command = yad --calendar --undecorated --mouse --close-on-unfocus --no-buttons --title=Calendar
 clock_rclick_command =
+
+#---- Battery (the Mac's, when VMware passes power status to the VM;
+#     hidden automatically when the VM sees no battery) ------------------
+battery_tooltip = 1
+battery_low_status = 10
+battery_low_cmd = notify-send -u critical "Battery low" "Plug in your Mac"
+bat1_format = %p
+bat1_font = Ubuntu Sans 10
+bat2_format =
+battery_font_color = #FFFFFF 100
+battery_padding = 10 3
+battery_background_id = 6
+battery_hide = 101
 
 #---- Tooltips --------------------------------------------------------------
 tooltip_show_timeout = 0.4

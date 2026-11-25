@@ -246,7 +246,7 @@ write_tint2rc() {
   [ -f "$base" ] || return 0
   awk -v s="$s" '
     function sc(v) { return int(v * s + 0.5) }
-    /^(rounded|border_width|panel_margin|panel_padding|button_padding|button_max_icon_size|launcher_padding|launcher_icon_size|taskbar_padding|task_maximum_size|task_padding|systray_padding|systray_icon_size|clock_padding|tooltip_padding) *=/ {
+    /^(rounded|border_width|panel_margin|panel_padding|button_padding|button_max_icon_size|launcher_padding|launcher_icon_size|taskbar_padding|task_maximum_size|task_padding|systray_padding|systray_icon_size|clock_padding|battery_padding|tooltip_padding) *=/ {
       split($0, kv, "="); n = split(kv[2], v, " "); line = kv[1] "="
       for (i = 1; i <= n; i++) line = line " " sc(v[i])
       print line; next }
