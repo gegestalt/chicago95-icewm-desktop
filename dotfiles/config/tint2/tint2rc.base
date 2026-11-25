@@ -163,7 +163,7 @@ border_color_pressed = #000000 100
 #---- Panel ---------------------------------------------------------------
 panel_items = PLTSC
 panel_size = 100% 38
-panel_margin = 16 0
+panel_margin = 0 0
 panel_padding = 8 5 6
 panel_background_id = 1
 wm_menu = 1
@@ -172,13 +172,11 @@ panel_position = bottom center horizontal
 panel_layer = top
 panel_monitor = all
 panel_shrink = 0
-# Auto-hide: windows use the whole screen; the dock slides up when the
-# pointer touches the bottom edge and hides again shortly after it leaves.
-autohide = 1
-autohide_show_timeout = 0.15
-autohide_hide_timeout = 0.6
-autohide_height = 2
-strut_policy = none
+# Always visible, flush with the bottom edge; windows stop right above it
+# (the strut reserves exactly the dock's height, so nothing shows beside
+# or under it).
+autohide = 0
+strut_policy = follow_size
 panel_window_name = chicago-dock
 disable_transparency = 0
 mouse_effects = 1
