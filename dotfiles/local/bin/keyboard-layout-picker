@@ -23,9 +23,10 @@
 # ibus's engine for everything that's actually going to render on screen.
 #
 # The icon itself is drawn with cairo rather than shipped as an image
-# file, so its two states ("EN"/"TR": black square, bold turquoise
-# #51A2DA text, matching the taskbar's other icons) never drift out of
-# sync with what LAYOUTS below actually lists.
+# file, so its two states ("EN"/"TR": XP Luna blue badge, bold white
+# text, matching the taskbar) never drift out of sync with what LAYOUTS
+# below actually lists.
+import math
 import subprocess
 
 import cairo
@@ -38,7 +39,7 @@ from gi.repository import GdkPixbuf, GLib, Gtk  # noqa: E402
 LAYOUTS = [("us", "EN"), ("tr", "TR")]
 IBUS_ENGINES = {"us": "xkb:us::eng", "tr": "xkb:tr::tur"}
 XKB_OPTIONS = "altwin:alt_win"
-ICON_SIZE = 32
+ICON_SIZE = 64
 
 
 def current_layout():
@@ -78,16 +79,50 @@ def set_layout(code):
 
 
 def render_icon(label):
-    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, ICON_SIZE, ICON_SIZE)
+    # XP Luna language-bar badge: rounded square with the taskbar's blue
+    # gradient, darker blue rim, soft top highlight, bold white letters.
+    # Drawn at 64px so it stays crisp when the tray scales it at 2x.
+    n = ICON_SIZE
+    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, n, n)
     ctx = cairo.Context(surface)
-    ctx.set_source_rgb(0, 0, 0)
-    ctx.rectangle(0, 0, ICON_SIZE, ICON_SIZE)
+
+    def rounded(x, y, w, h, r):
+        ctx.new_sub_path()
+        ctx.arc(x + w - r, y + r, r, -math.pi / 2, 0)
+        ctx.arc(x + w - r, y + h - r, r, 0, math.pi / 2)
+        ctx.arc(x + r, y + h - r, r, math.pi / 2, math.pi)
+        ctx.arc(x + r, y + r, r, math.pi, 3 * math.pi / 2)
+        ctx.close_path()
+
+    m = n * 0.06
+    rounded(m, m, n - 2 * m, n - 2 * m, n * 0.18)
+    grad = cairo.LinearGradient(0, m, 0, n - m)
+    grad.add_color_stop_rgb(0.0, 0x5C / 255, 0x9D / 255, 0xF5 / 255)
+    grad.add_color_stop_rgb(0.45, 0x31 / 255, 0x6A / 255, 0xE5 / 255)
+    grad.add_color_stop_rgb(1.0, 0x1E / 255, 0x4F / 255, 0xC4 / 255)
+    ctx.set_source(grad)
+    ctx.fill_preserve()
+    ctx.set_line_width(n * 0.05)
+    ctx.set_source_rgb(0x0F / 255, 0x35 / 255, 0x8F / 255)
+    ctx.stroke()
+
+    # glossy highlight on the upper half
+    rounded(m * 2.2, m * 2.2, n - 4.4 * m, (n - 4.4 * m) * 0.42, n * 0.12)
+    shine = cairo.LinearGradient(0, m * 2.2, 0, n * 0.5)
+    shine.add_color_stop_rgba(0, 1, 1, 1, 0.45)
+    shine.add_color_stop_rgba(1, 1, 1, 1, 0.05)
+    ctx.set_source(shine)
     ctx.fill()
-    ctx.set_source_rgb(0x51 / 255, 0xA2 / 255, 0xDA / 255)
-    ctx.select_font_face("sans-serif", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
-    ctx.set_font_size(14)
+
+    ctx.select_font_face("Ubuntu Sans", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
+    ctx.set_font_size(n * 0.44)
     xb, yb, w, h, _, _ = ctx.text_extents(label)
-    ctx.move_to(ICON_SIZE / 2 - w / 2 - xb, ICON_SIZE / 2 - h / 2 - yb)
+    x, y = n / 2 - w / 2 - xb, n / 2 - h / 2 - yb
+    ctx.set_source_rgba(0, 0, 0.2, 0.45)   # drop shadow
+    ctx.move_to(x + n * 0.025, y + n * 0.03)
+    ctx.show_text(label)
+    ctx.set_source_rgb(1, 1, 1)
+    ctx.move_to(x, y)
     ctx.show_text(label)
     surface.flush()
 
