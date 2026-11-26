@@ -242,6 +242,7 @@ except FileNotFoundError:
 cfg.update({
     "window.titleBarStyle": "native",
     "window.customTitleBarVisibility": "never",
+    "window.menuStyle": "custom",
     "window.menuBarVisibility": "classic",
     "editor.fontFamily": "'JetBrains Mono', monospace",
     "terminal.integrated.fontFamily": "'JetBrains Mono'",
