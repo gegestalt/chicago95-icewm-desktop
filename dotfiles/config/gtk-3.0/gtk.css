@@ -61,6 +61,15 @@ menu menuitem:hover accelerator,
 menu menuitem:hover arrow {
   color: #FFFFFF;
 }
+/* An open submenu counts as inside its highlighted parent item, so the
+   white text above would reach its items too; keep un-highlighted ones dark. */
+menu menuitem:not(:hover) label,
+menu menuitem:not(:hover) arrow {
+  color: #1E1E1E;
+}
+menu menuitem:not(:hover) accelerator {
+  color: #6E6A5E;
+}
 menu menuitem:disabled,
 menu menuitem:disabled label,
 menu menuitem:disabled accelerator {
