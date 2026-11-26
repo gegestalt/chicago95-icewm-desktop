@@ -248,6 +248,7 @@ cfg.update({
     "terminal.external.linuxExec": "ghostty",
     "workbench.colorTheme": "Default Dark Modern",
     "explorer.compactFolders": False,
+    "accessibility.signalOptions.volume": 0,
 })
 open(p, "w").write(json.dumps(cfg, indent=4) + "\n")
 PY
