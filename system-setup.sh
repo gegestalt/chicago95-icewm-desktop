@@ -95,5 +95,9 @@ sudo apt-get purge -y kdump-tools kexec-tools || true
 sudo update-grub
 
 # ---------------------------------------------------------------------------
+step "Performance tuning (zram swap, idle services off, Docker on demand)"
+"$REPO_DIR/system/tune.sh"
+
+# ---------------------------------------------------------------------------
 step "Done"
 echo "Reboot to apply the keyboard layout, the login screen, the freed RAM and docker group."

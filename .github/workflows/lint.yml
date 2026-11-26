@@ -12,6 +12,7 @@ env:
     system-setup.sh
     system/slim-down.sh
     system/firefox-deb.sh
+    system/tune.sh
     dotfiles/local/bin/build-app-grid
 
 jobs:

@@ -174,6 +174,10 @@ One run does everything:
    session as the default login, US keyboard, VS Code (Microsoft repo),
    Ghostty as the default terminal, the dev toolchain (git, gh, docker,
    node, rust, ripgrep...), `nmap` and `ifconfig` (net-tools).
+   Performance tuning (`system/tune.sh`): compressed swap in RAM (zram),
+   kernel memory settings for it, more file watches for VS Code/gopls,
+   idle services off (avahi, power profiles, sysstat, rsyslog, phone and
+   camera monitors), Docker started on first use instead of at boot.
 2. **Theme**: the upstream Chicago95 theme, pinned to the commit this
    desktop was built with, installed without its GUI installer.
 3. **Desktop**: every config in this repo (window theme, dock, Start
@@ -227,6 +231,7 @@ uninstall.sh                      reverts a previous install.sh run
 system-setup.sh                   root half: X11/LightDM session, apps, dev tools
 system/firefox-deb.sh             snap -> .deb Firefox, profile carried over
 system/slim-down.sh               removes what Chicago OS doesn't use (--dry-run)
+system/tune.sh                    zram swap, sysctl, idle services off, Docker on demand
 dotfiles/icewm/                   menu, toolbar, preferences, theme assets (1x + 2x)
 dotfiles/config/                  gtk-3.0, gtk-4.0, mimeapps.list, dunst
 dotfiles/local/bin/build-app-grid script that (re)builds ~/Applications
