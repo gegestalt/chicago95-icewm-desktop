@@ -249,6 +249,8 @@ cfg.update({
     "workbench.colorTheme": "Default Dark Modern",
     "explorer.compactFolders": False,
     "accessibility.signalOptions.volume": 0,
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000,
 })
 open(p, "w").write(json.dumps(cfg, indent=4) + "\n")
 PY
