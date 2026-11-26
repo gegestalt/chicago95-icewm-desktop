@@ -257,7 +257,9 @@ On top of the IceWM/Chicago95 base:
   window frames, desktop icons, cursor, dock and menu on every change.
   Settings: `~/.config/chicago-os/display.conf` (`SCALE=auto` or a fixed value,
   `TARGET_WIDTH`, `DESKTOP_ICON`, fonts). In VMware Fusion, enable
-  "Use full resolution for Retina display" for sharp text.
+  "Use full resolution for Retina display" for sharp text, and
+  "Accelerate 3D Graphics" (without it Firefox and the desktop render on the
+  CPU and scrolling stutters).
 - **Low-CPU compositor** (picom with damage tracking), Ubuntu Sans / JetBrains
   Mono everywhere, a "Chicago Night" Ghostty theme in the themed window frame,
   matching notifications, and Firefox using the system frame.

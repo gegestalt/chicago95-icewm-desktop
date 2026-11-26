@@ -709,6 +709,8 @@ echo "  gh auth login            GitHub CLI"
 echo "  claude                   sign in to Claude Code"
 echo "  VMware Fusion: Settings > Display > 'Use full resolution for Retina display'"
 echo "                 (without it the guest is 1280x800 and the 2x scale won't fit)"
+echo "  VMware Fusion: Settings > Display > 'Accelerate 3D Graphics' (else the browser"
+echo "                 and desktop are drawn by the CPU and scrolling stutters); 4 CPUs, 8 GB RAM"
 if [ "${PLYMOUTH_INSTALLED:-0}" = "1" ]; then
   echo "The Plymouth boot theme is staged — reboot to see it."
 fi
