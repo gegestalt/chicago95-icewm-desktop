@@ -58,6 +58,10 @@ command -v xfce4-power-manager >/dev/null 2>&1 && xfce4-power-manager &
 # Desktop icons / file manager.
 # Same tidy icon grid every login (see chicago-desktop-layout).
 [ -x "$HOME/.local/bin/chicago-desktop-layout" ] && "$HOME/.local/bin/chicago-desktop-layout"
+# No beeps: GTK's error bell (file pickers, text fields) rings the X bell,
+# which VMware plays as the Mac's alert chime.
+xset b off 2>/dev/null || true
+gsettings set org.gnome.desktop.wm.preferences audible-bell false 2>/dev/null || true
 pcmanfm --desktop --profile=icewm &
 
 # Works around a pcmanfm bug (issue #19): a dragged desktop icon doesn't
