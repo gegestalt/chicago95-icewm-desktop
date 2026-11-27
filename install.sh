@@ -243,6 +243,7 @@ cfg.update({
     "window.titleBarStyle": "native",
     "window.customTitleBarVisibility": "auto",
     "window.menuStyle": "custom",
+    "window.dialogStyle": "custom",
     "window.menuBarVisibility": "classic",
     "editor.fontFamily": "'JetBrains Mono', monospace",
     "terminal.integrated.fontFamily": "'JetBrains Mono'",
